@@ -44,3 +44,4 @@ final class UserAuthService
         return $user;
     }
 }
+

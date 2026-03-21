@@ -93,10 +93,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add User</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
@@ -105,18 +102,68 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         radial-gradient(circle at 80% 90%, rgba(251, 113, 133, 0.14), transparent 25%),
         #070b14;
     }
+
+    .skip-link {
+      position: fixed;
+      left: 0.75rem;
+      top: 0.75rem;
+      z-index: 80;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.92);
+      color: #e2e8f0;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transform: translateY(-140%);
+      transition: transform 180ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 1px;
+    }
+
+    .utility-link {
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.5);
+      color: #dbeafe;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: background-color 170ms ease, border-color 170ms ease;
+    }
+
+    .utility-link:hover {
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .utility-link:focus-visible,
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
+    }
   </style>
 </head>
 <body class="min-h-screen text-slate-100 antialiased">
-  <main class="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+  <a href="#mainContent" class="skip-link">Skip to add user content</a>
+  <main id="mainContent" class="mx-auto max-w-3xl px-4 py-6 sm:px-6">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-semibold">Add User</h1>
         <p class="text-sm text-slate-300">Signed in as <?= e((string) $currentUser['full_name']) ?> (admin)</p>
       </div>
-      <div class="flex gap-2">
-        <a href="manage_users.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Manage Users</a>
-        <a href="index.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Checkout</a>
+      <div class="flex flex-wrap gap-2" aria-label="Add user navigation">
+        <a href="manage_users.php" class="utility-link">Manage Users</a>
+        <a href="dashboard.php" class="utility-link">Dashboard</a>
+        <a href="settings.php" class="utility-link">Settings</a>
+        <a href="index.php" class="utility-link">Checkout</a>
       </div>
     </header>
 
@@ -134,7 +181,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       </div>
     <?php endif; ?>
 
-    <form method="post" class="space-y-4 rounded-3xl border border-white/10 bg-slate-900/60 p-5 shadow-2xl backdrop-blur-sm">
+    <form method="post" class="space-y-4 rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
       <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['csrf_token']) ?>" />
 
       <label class="block text-sm">
@@ -183,9 +230,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       </div>
 
       <div class="pt-2">
-        <button class="rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-5 py-2 font-semibold text-slate-900">Create User</button>
+        <button class="min-h-[42px] rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Create User</button>
       </div>
     </form>
   </main>
 </body>
 </html>
+
+

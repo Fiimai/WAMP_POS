@@ -52,6 +52,8 @@ CREATE TABLE categories (
 CREATE TABLE shop_settings (
   id TINYINT UNSIGNED NOT NULL DEFAULT 1,
   shop_name VARCHAR(140) NOT NULL DEFAULT 'My Shop',
+  shop_logo_url VARCHAR(255) NULL,
+  business_tagline VARCHAR(160) NULL,
   shop_address VARCHAR(255) NULL,
   shop_phone VARCHAR(50) NULL,
   shop_tax_id VARCHAR(80) NULL,

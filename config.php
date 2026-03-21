@@ -92,3 +92,4 @@ return [
         'charset' => $resolved['charset'],
     ],
 ];
+

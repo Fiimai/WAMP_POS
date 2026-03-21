@@ -29,6 +29,9 @@ function renderReceiptHtml(array $sale, array $items, array $shop): string
 {
     $currency = (string) ($shop['currency_symbol'] ?? '$');
     $shopName = (string) ($shop['shop_name'] ?? 'My Shop');
+  $shopBrand = strtoupper($shopName) . ' POS';
+  $logoUrl = trim((string) ($shop['shop_logo_url'] ?? ''));
+  $tagline = trim((string) ($shop['business_tagline'] ?? ''));
     $address = trim((string) ($shop['shop_address'] ?? ''));
     $phone = trim((string) ($shop['shop_phone'] ?? ''));
     $taxId = trim((string) ($shop['shop_tax_id'] ?? ''));
@@ -39,7 +42,9 @@ function renderReceiptHtml(array $sale, array $items, array $shop): string
     ?>
     <div class="receipt">
       <div class="center">
+        <?php if ($logoUrl !== ''): ?><p><img src="<?= e($logoUrl) ?>" alt="Shop logo" style="max-height:42px; max-width:100%;" /></p><?php endif; ?>
         <h1><?= e($shopName) ?></h1>
+        <?php if ($tagline !== ''): ?><p><?= e($tagline) ?></p><?php endif; ?>
         <?php if ($address !== ''): ?><p><?= e($address) ?></p><?php endif; ?>
         <?php if ($phone !== ''): ?><p>Tel: <?= e($phone) ?></p><?php endif; ?>
         <?php if ($taxId !== ''): ?><p>Tax ID: <?= e($taxId) ?></p><?php endif; ?>
@@ -95,7 +100,7 @@ function renderReceiptHtml(array $sale, array $items, array $shop): string
 
       <div class="center">
         <?php if ($footer !== ''): ?><p><?= e($footer) ?></p><?php endif; ?>
-        <p>Powered by NovaPOS</p>
+        <p>Powered by <?= e($shopBrand) ?></p>
       </div>
     </div>
     <?php
@@ -289,3 +294,4 @@ try {
   </script>
 </body>
 </html>
+

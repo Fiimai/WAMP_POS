@@ -9,6 +9,182 @@ This blueprint defines a scalable, WAMP-friendly Point of Sale (POS) web applica
 
 The structure below keeps compatibility high while enabling clean separation of concerns and long-term maintainability.
 
+## Ghana NLP Translation Setup
+
+This POS now supports Ghana NLP-backed runtime translations for supported Ghanaian language codes.
+
+Required environment variable:
+
+- `GHANANLP_API_KEY` = your Ghana NLP subscription key
+
+API bridge endpoint used by the UI:
+
+- `api/translate_text.php`
+
+Notes:
+
+- UI language codes are aligned to Ghana NLP codes: `tw`, `ee`, `gaa`, `fat`, `dag`, `gur`, `kus`.
+- Legacy saved language values are auto-mapped: `twi -> tw`, `ewe -> ee`, `ga -> gaa`, `sehwi -> tw`.
+- If `GHANANLP_API_KEY` is not set, the POS falls back to built-in local translations.
+
+## Quick Setup Guide
+
+Use this section for a real first run of the current project.
+
+### Prerequisites
+
+- PHP 8.1+
+- MySQL 8+ or MariaDB
+- Apache or Nginx
+- cURL enabled in PHP
+
+### Option A: Windows (WAMP)
+
+1. Copy this project to your WAMP web root, for example:
+
+`C:\wamp64\www\pos-app`
+
+1. Start WAMP and ensure Apache + MySQL are running.
+
+1. Create/import database in phpMyAdmin.
+
+Import `schema.sql` first, then import `seed.sql`.
+
+1. Open the app:
+
+`http://localhost/pos-app/login.php`
+
+### Option B: Linux (LAMP/LEMP)
+
+1. Place project in your web directory, for example:
+
+`/var/www/pos-app`
+
+1. Ensure web user can read project files and write cache/session folders if needed.
+
+1. Create/import database:
+
+```bash
+mysql -u root -p < schema.sql
+mysql -u root -p < seed.sql
+```
+
+1. Serve through Apache/Nginx and open `/login.php`.
+
+### Database Configuration
+
+The app reads DB values from environment variables and falls back to local defaults in `config.php`.
+
+Local fallback defaults:
+
+- DB host: `127.0.0.1`
+- DB port: `3306`
+- DB name: `pos_db`
+- DB user: `root`
+- DB pass: empty
+
+Optional explicit environment variables:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASS`
+- `DB_CHARSET`
+
+### First Login
+
+Seed users are created by `seed.sql`:
+
+- Username: `admin` (admin role)
+- Username: `cashier1` (cashier role)
+
+If you cannot log in with seeded credentials, reset an account password directly in MySQL to `password` using this known bcrypt hash from the seed data:
+
+```sql
+UPDATE users
+SET password_hash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+WHERE username = 'admin';
+```
+
+Then sign in with:
+
+- Username: `admin`
+- Password: `password`
+
+### Ghana NLP Translation Runtime
+
+To enable live Ghana NLP translation calls from the POS UI, set:
+
+- `GHANANLP_API_KEY`
+
+Endpoints used:
+
+- `https://translation-api.ghananlp.org/v1/languages`
+- `https://translation-api.ghananlp.org/v1/translate`
+
+If the key is missing or API is unavailable, the UI keeps working with built-in translation fallbacks.
+
+### Troubleshooting
+
+1. Blank/500 page on startup:
+
+Confirm `schema.sql` and `seed.sql` were imported into `pos_db`, and confirm MySQL is running with matching DB credentials.
+
+1. Login always fails:
+
+Reset password using the SQL snippet above.
+
+1. Ghana NLP translation not changing labels:
+
+Ensure `GHANANLP_API_KEY` is set in your server environment and PHP cURL extension is enabled.
+
+1. API throttling errors:
+
+Wait for the rate limiter window to reset (translation endpoint is rate limited).
+
+### Production Hardening Checklist
+
+1. Enforce HTTPS in front of the app.
+
+Use TLS certificates and redirect all HTTP traffic to HTTPS.
+
+1. Set all required production DB environment variables.
+
+Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`, and keep secrets out of source control.
+
+1. Use a least-privilege MySQL user.
+
+Grant only required permissions on the POS database, avoid root for production runtime.
+
+1. Configure secure PHP session behavior.
+
+Keep secure cookies enabled, use `HttpOnly`, and `SameSite=Lax` or stricter.
+
+1. Disable verbose error display in production.
+
+Use server logs for diagnostics, do not expose stack traces to users.
+
+1. Restrict file and directory permissions.
+
+Allow write access only where necessary (for example cache/session directories).
+
+1. Protect access to admin-only routes.
+
+Create strong admin credentials, disable unused accounts, and review role assignments regularly.
+
+1. Configure translation service secret.
+
+Set `GHANANLP_API_KEY` only in environment variables, never commit it to repository files.
+
+1. Add backup and restore routine.
+
+Automate daily database backups and test a restore procedure at least once per month.
+
+1. Monitor audit and security signals.
+
+Review login failures, rate-limit events, and audit logs for unusual activity.
+
 ## 1) Recommended Directory Structure
 
 ```text
@@ -260,11 +436,26 @@ Shop customization:
 - Admin-only settings page: `http://localhost/settings.php`
 - Configurable fields:
   - store identity (name, address, phone, tax ID)
+  - business tagline
+  - store logo URL (for login/receipt branding)
+  - category setup (add/activate/deactivate categories for each business type)
+  - category bulk CSV onboarding in settings
   - receipt header/footer
   - currency code/symbol
   - tax rate (%)
   - theme accent colors
 - Tax setting is used by live cart totals and transactional checkout.
+
+Bulk onboarding tools:
+
+- Categories bulk import: `settings.php`
+  - Upload CSV with headers: `name, slug, is_active` (required: `name`)
+  - Existing slug rows are updated (status), new rows are created.
+- Users bulk import: `manage_users.php`
+  - Upload CSV with headers: `full_name, username, email, password, role, is_active`
+- Products bulk import: `manage_products.php`
+  - Upload CSV with headers: `name, sku, category, unit_price, stock_qty, reorder_level, barcode, description, cost_price, is_active`
+  - Import performs upsert by SKU so repeated imports can update records safely.
 
 Admin product management:
 
@@ -282,6 +473,7 @@ Instant cart UX (no page reload):
   - add-to-cart toast notifications (top-right)
   - 200ms cart indicator pop animation on successful add
   - polished empty-cart illustration/state message
+  - API search by product name, barcode, SKU, and category
 
 Atomic checkout flow:
 
@@ -298,6 +490,7 @@ Thermal receipt printing:
 - Printable receipt page: `receipt.php?sale_id=SALE_ID`
 - Auto-print mode: `receipt.php?sale_id=SALE_ID&print=1`
 - Checkout success now attempts to open the receipt in a new window for immediate cashier printing.
+- Receipt footer branding now follows your configured store name (`<SHOP_NAME> POS`) and supports optional logo/tagline display.
 
 User management:
 
@@ -347,10 +540,26 @@ If the database is not reachable, the UI shows a non-fatal warning banner instea
 
 - Open `dashboard.php` to view:
   - today's total sales
+  - average basket value
+  - projected end-of-day sales
+  - momentum vs yesterday (%)
   - today's top-selling products
   - low-stock alerts based on `reorder_level`
   - 7-day sales trend chart
+  - smart operational insight cards (trend + inventory risk + pacing)
 - Chart rendering uses Chart.js with custom gradient stroke/fill and hidden grid lines for a premium presentation.
+
+### Existing Database Upgrade (for older installs)
+
+If your database was created before branding upgrades, run this SQL once:
+
+```sql
+USE pos_db;
+
+ALTER TABLE shop_settings
+  ADD COLUMN IF NOT EXISTS shop_logo_url VARCHAR(255) NULL AFTER shop_name,
+  ADD COLUMN IF NOT EXISTS business_tagline VARCHAR(160) NULL AFTER shop_logo_url;
+```
 
 ## 12) Clean URLs and Auto Config
 

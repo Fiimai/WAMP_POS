@@ -3,6 +3,8 @@ USE pos_db;
 INSERT INTO shop_settings (
   id,
   shop_name,
+  shop_logo_url,
+  business_tagline,
   shop_address,
   shop_phone,
   shop_tax_id,
@@ -17,6 +19,8 @@ INSERT INTO shop_settings (
 SELECT
   1,
   'Khanun',
+  '',
+  'Retail made gracious and fast',
   '123 Market Street',
   '+1-555-0100',
   'TAX-0001',

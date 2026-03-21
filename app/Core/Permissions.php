@@ -45,3 +45,4 @@ final class Permissions
         return in_array($capability, self::forRole($role), true);
     }
 }
+

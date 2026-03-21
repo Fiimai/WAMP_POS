@@ -23,8 +23,11 @@ final class ProductRepository
 
         $params = [];
         if ($query !== null && $query !== '') {
-            $sql .= ' AND (p.name LIKE :q OR p.sku LIKE :q OR p.barcode LIKE :q)';
-            $params[':q'] = '%' . $query . '%';
+            $sql .= ' AND (p.name LIKE :q_name OR p.sku LIKE :q_sku OR p.barcode LIKE :q_barcode)';
+            $searchTerm = '%' . $query . '%';
+            $params[':q_name'] = $searchTerm;
+            $params[':q_sku'] = $searchTerm;
+            $params[':q_barcode'] = $searchTerm;
         }
 
         $sql .= ' ORDER BY p.name ASC LIMIT 300';
@@ -114,3 +117,4 @@ final class ProductRepository
         return $statement->execute();
     }
 }
+

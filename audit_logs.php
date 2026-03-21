@@ -138,10 +138,7 @@ $csvQuery['export'] = 'csv';
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= e($shopName) ?> Audit Logs</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
@@ -150,18 +147,67 @@ $csvQuery['export'] = 'csv';
         radial-gradient(circle at 80% 90%, rgba(251, 113, 133, 0.14), transparent 25%),
         #070b14;
     }
+
+    .skip-link {
+      position: fixed;
+      left: 0.75rem;
+      top: 0.75rem;
+      z-index: 80;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.92);
+      color: #e2e8f0;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transform: translateY(-140%);
+      transition: transform 180ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 1px;
+    }
+
+    .utility-link {
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.5);
+      color: #dbeafe;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: background-color 170ms ease, border-color 170ms ease;
+    }
+
+    .utility-link:hover {
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .utility-link:focus-visible,
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
+    }
   </style>
 </head>
 <body class="min-h-screen text-slate-100 antialiased">
-  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+  <a href="#mainContent" class="skip-link">Skip to audit logs content</a>
+  <main id="mainContent" class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-semibold">Audit Logs</h1>
         <p class="text-sm text-slate-300">Signed in as <?= e((string) $currentUser['full_name']) ?> (admin)</p>
       </div>
-      <div class="flex gap-2">
-        <a href="dashboard.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Dashboard</a>
-        <a href="index.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Checkout</a>
+      <div class="flex flex-wrap gap-2" aria-label="Audit navigation">
+        <a href="dashboard.php" class="utility-link">Dashboard</a>
+        <a href="settings.php" class="utility-link">Settings</a>
+        <a href="index.php" class="utility-link">Checkout</a>
       </div>
     </header>
 
@@ -184,7 +230,7 @@ $csvQuery['export'] = 'csv';
           <input type="date" name="to" value="<?= e($toDate) ?>" class="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 outline-none focus:border-cyan-300" />
         </label>
         <div class="sm:col-span-4 flex flex-wrap gap-2">
-          <button class="rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Apply Filters</button>
+          <button class="min-h-[42px] rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Apply Filters</button>
           <a href="audit_logs.php" class="rounded-xl border border-white/20 px-4 py-2 text-sm hover:bg-white/10">Reset</a>
           <a href="audit_logs.php?<?= e(http_build_query($csvQuery)) ?>" class="rounded-xl border border-cyan-300/35 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20">Export CSV</a>
         </div>
@@ -199,12 +245,12 @@ $csvQuery['export'] = 'csv';
       <table class="min-w-full text-sm">
         <thead class="bg-white/5 text-slate-300">
           <tr>
-            <th class="px-3 py-2 text-left">When</th>
-            <th class="px-3 py-2 text-left">Actor</th>
-            <th class="px-3 py-2 text-left">Action</th>
-            <th class="px-3 py-2 text-left">Entity</th>
-            <th class="px-3 py-2 text-left">IP</th>
-            <th class="px-3 py-2 text-left">Details</th>
+            <th class="px-3 py-2.5 text-left">When</th>
+            <th class="px-3 py-2.5 text-left">Actor</th>
+            <th class="px-3 py-2.5 text-left">Action</th>
+            <th class="px-3 py-2.5 text-left">Entity</th>
+            <th class="px-3 py-2.5 text-left">IP</th>
+            <th class="px-3 py-2.5 text-left">Details</th>
           </tr>
         </thead>
         <tbody>
@@ -221,11 +267,11 @@ $csvQuery['export'] = 'csv';
                 }
               ?>
               <tr class="border-t border-white/10 align-top">
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['created_at']) ?></td>
-                <td class="px-3 py-2 text-slate-200"><?= e((string) ($row['actor_name'] ?? 'System')) ?></td>
-                <td class="px-3 py-2 text-cyan-200"><?= e((string) $row['action']) ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e($entityLabel) ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) ($row['ip_address'] ?? '')) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['created_at']) ?></td>
+                <td class="px-3 py-2.5 text-slate-200"><?= e((string) ($row['actor_name'] ?? 'System')) ?></td>
+                <td class="px-3 py-2.5 text-cyan-200"><?= e((string) $row['action']) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e($entityLabel) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) ($row['ip_address'] ?? '')) ?></td>
                 <td class="px-3 py-2 text-xs text-slate-300"><pre class="whitespace-pre-wrap break-all"><?= e((string) ($row['details_json'] ?? '')) ?></pre></td>
               </tr>
             <?php endforeach; ?>
@@ -245,3 +291,5 @@ $csvQuery['export'] = 'csv';
   </main>
 </body>
 </html>
+
+

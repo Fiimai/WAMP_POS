@@ -161,10 +161,7 @@ try {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inventory Adjustments</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
@@ -173,18 +170,67 @@ try {
         radial-gradient(circle at 80% 90%, rgba(251, 113, 133, 0.14), transparent 25%),
         #070b14;
     }
+
+    .skip-link {
+      position: fixed;
+      left: 0.75rem;
+      top: 0.75rem;
+      z-index: 80;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.92);
+      color: #e2e8f0;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transform: translateY(-140%);
+      transition: transform 180ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 1px;
+    }
+
+    .utility-link {
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.5);
+      color: #dbeafe;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: background-color 170ms ease, border-color 170ms ease;
+    }
+
+    .utility-link:hover {
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .utility-link:focus-visible,
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
+    }
   </style>
 </head>
 <body class="min-h-screen text-slate-100 antialiased">
-  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+  <a href="#mainContent" class="skip-link">Skip to inventory adjustments content</a>
+  <main id="mainContent" class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-semibold">Inventory Adjustments</h1>
         <p class="text-sm text-slate-300">Signed in as <?= e((string) $currentUser['full_name']) ?> (<?= e((string) $currentUser['role']) ?>)</p>
       </div>
-      <div class="flex gap-2">
-        <a href="index.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Checkout</a>
-        <a href="dashboard.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Dashboard</a>
+      <div class="flex flex-wrap gap-2" aria-label="Inventory navigation">
+        <a href="index.php" class="utility-link">Checkout</a>
+        <a href="dashboard.php" class="utility-link">Dashboard</a>
+        <a href="settings.php" class="utility-link">Settings</a>
       </div>
     </header>
 
@@ -202,7 +248,7 @@ try {
       </div>
     <?php endif; ?>
 
-    <section class="mb-5 rounded-3xl border border-white/10 bg-slate-900/60 p-5 shadow-2xl backdrop-blur-sm">
+    <section class="mb-5 rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
       <h2 class="mb-3 text-lg font-semibold">Manual Stock Adjustment</h2>
       <form method="post" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['csrf_token']) ?>" />
@@ -244,7 +290,7 @@ try {
         </label>
 
         <div class="flex items-end">
-          <button class="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 font-semibold text-slate-900">Apply Adjustment</button>
+          <button class="min-h-[42px] w-full rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Apply Adjustment</button>
         </div>
       </form>
     </section>
@@ -253,14 +299,14 @@ try {
       <table class="min-w-full text-sm">
         <thead class="bg-white/5 text-slate-300">
           <tr>
-            <th class="px-3 py-2 text-left">When</th>
-            <th class="px-3 py-2 text-left">Product</th>
-            <th class="px-3 py-2 text-left">Type</th>
-            <th class="px-3 py-2 text-right">Qty Delta</th>
-            <th class="px-3 py-2 text-right">Before</th>
-            <th class="px-3 py-2 text-right">After</th>
-            <th class="px-3 py-2 text-left">By</th>
-            <th class="px-3 py-2 text-left">Notes</th>
+            <th class="px-3 py-2.5 text-left">When</th>
+            <th class="px-3 py-2.5 text-left">Product</th>
+            <th class="px-3 py-2.5 text-left">Type</th>
+            <th class="px-3 py-2.5 text-right">Qty Delta</th>
+            <th class="px-3 py-2.5 text-right">Before</th>
+            <th class="px-3 py-2.5 text-right">After</th>
+            <th class="px-3 py-2.5 text-left">By</th>
+            <th class="px-3 py-2.5 text-left">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -272,14 +318,14 @@ try {
             <?php foreach ($recentMovements as $row): ?>
               <?php $delta = (int) $row['qty_change']; ?>
               <tr class="border-t border-white/10">
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['created_at']) ?></td>
-                <td class="px-3 py-2 text-white"><?= e((string) $row['product_name']) ?> <span class="text-xs text-slate-400">(<?= e((string) $row['sku']) ?>)</span></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['movement_type']) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['created_at']) ?></td>
+                <td class="px-3 py-2.5 text-white"><?= e((string) $row['product_name']) ?> <span class="text-xs text-slate-400">(<?= e((string) $row['sku']) ?>)</span></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['movement_type']) ?></td>
                 <td class="px-3 py-2 text-right <?= $delta < 0 ? 'text-rose-200' : 'text-emerald-200' ?>"><?= $delta ?></td>
-                <td class="px-3 py-2 text-right text-slate-200"><?= (int) $row['stock_before'] ?></td>
-                <td class="px-3 py-2 text-right text-slate-200"><?= (int) $row['stock_after'] ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['changed_by_name']) ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) ($row['notes'] ?? '')) ?></td>
+                <td class="px-3 py-2.5 text-right text-slate-200"><?= (int) $row['stock_before'] ?></td>
+                <td class="px-3 py-2.5 text-right text-slate-200"><?= (int) $row['stock_after'] ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['changed_by_name']) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) ($row['notes'] ?? '')) ?></td>
               </tr>
             <?php endforeach; ?>
           <?php endif; ?>
@@ -289,3 +335,5 @@ try {
   </main>
 </body>
 </html>
+
+

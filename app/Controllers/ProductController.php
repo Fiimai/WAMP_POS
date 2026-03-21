@@ -13,3 +13,4 @@ final class ProductController
         return Product::activeList($search);
     }
 }
+

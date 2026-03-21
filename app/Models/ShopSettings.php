@@ -10,14 +10,68 @@ use PDO;
 final class ShopSettings
 {
     /**
+     * @var array<string, bool>|null
+     */
+    private static ?array $columnMap = null;
+
+    private static function hasColumn(string $column): bool
+    {
+        if (self::$columnMap !== null) {
+            return self::$columnMap[$column] ?? false;
+        }
+
+        self::$columnMap = [];
+
+        try {
+            $pdo = Database::connection();
+            $statement = $pdo->query('SHOW COLUMNS FROM shop_settings');
+            $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($rows as $row) {
+                $name = (string) ($row['Field'] ?? '');
+                if ($name !== '') {
+                    self::$columnMap[$name] = true;
+                }
+            }
+        } catch (\Throwable $throwable) {
+            self::$columnMap = [];
+        }
+
+        return self::$columnMap[$column] ?? false;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function get(): array
     {
         $pdo = Database::connection();
+
+        $selectColumns = [
+            'id',
+            'shop_name',
+            'shop_address',
+            'shop_phone',
+            'shop_tax_id',
+            'currency_code',
+            'currency_symbol',
+            'tax_rate_percent',
+            'receipt_header',
+            'receipt_footer',
+            'theme_accent_primary',
+            'theme_accent_secondary',
+        ];
+
+        if (self::hasColumn('shop_logo_url')) {
+            $selectColumns[] = 'shop_logo_url';
+        }
+
+        if (self::hasColumn('business_tagline')) {
+            $selectColumns[] = 'business_tagline';
+        }
+
         $statement = $pdo->query(
-            'SELECT id, shop_name, shop_address, shop_phone, shop_tax_id, currency_code, currency_symbol,
-                    tax_rate_percent, receipt_header, receipt_footer, theme_accent_primary, theme_accent_secondary
+            'SELECT ' . implode(', ', $selectColumns) . '
              FROM shop_settings
              WHERE id = 1
              LIMIT 1'
@@ -25,6 +79,8 @@ final class ShopSettings
 
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         if ($row !== false) {
+            $row['shop_logo_url'] = (string) ($row['shop_logo_url'] ?? '');
+            $row['business_tagline'] = (string) ($row['business_tagline'] ?? '');
             return $row;
         }
 
@@ -41,6 +97,8 @@ final class ShopSettings
             'receipt_footer' => 'No refunds without receipt',
             'theme_accent_primary' => '#06B6D4',
             'theme_accent_secondary' => '#22D3AA',
+            'shop_logo_url' => '',
+            'business_tagline' => '',
         ];
     }
 
@@ -51,32 +109,66 @@ final class ShopSettings
     {
         $pdo = Database::connection();
 
-        $sql = 'INSERT INTO shop_settings (
-                    id, shop_name, shop_address, shop_phone, shop_tax_id,
-                    currency_code, currency_symbol, tax_rate_percent,
-                    receipt_header, receipt_footer,
-                    theme_accent_primary, theme_accent_secondary
-                ) VALUES (
-                    1, :shop_name, :shop_address, :shop_phone, :shop_tax_id,
-                    :currency_code, :currency_symbol, :tax_rate_percent,
-                    :receipt_header, :receipt_footer,
-                    :theme_accent_primary, :theme_accent_secondary
-                )
-                ON DUPLICATE KEY UPDATE
-                    shop_name = VALUES(shop_name),
-                    shop_address = VALUES(shop_address),
-                    shop_phone = VALUES(shop_phone),
-                    shop_tax_id = VALUES(shop_tax_id),
-                    currency_code = VALUES(currency_code),
-                    currency_symbol = VALUES(currency_symbol),
-                    tax_rate_percent = VALUES(tax_rate_percent),
-                    receipt_header = VALUES(receipt_header),
-                    receipt_footer = VALUES(receipt_footer),
-                    theme_accent_primary = VALUES(theme_accent_primary),
-                    theme_accent_secondary = VALUES(theme_accent_secondary)';
+        $supportsLogo = self::hasColumn('shop_logo_url');
+        $supportsTagline = self::hasColumn('business_tagline');
+
+        $insertColumns = [
+            'id', 'shop_name', 'shop_address', 'shop_phone', 'shop_tax_id',
+            'currency_code', 'currency_symbol', 'tax_rate_percent',
+            'receipt_header', 'receipt_footer',
+            'theme_accent_primary', 'theme_accent_secondary',
+        ];
+
+        $valueColumns = [
+            '1', ':shop_name', ':shop_address', ':shop_phone', ':shop_tax_id',
+            ':currency_code', ':currency_symbol', ':tax_rate_percent',
+            ':receipt_header', ':receipt_footer',
+            ':theme_accent_primary', ':theme_accent_secondary',
+        ];
+
+        if ($supportsLogo) {
+            $insertColumns[] = 'shop_logo_url';
+            $valueColumns[] = ':shop_logo_url';
+        }
+
+        if ($supportsTagline) {
+            $insertColumns[] = 'business_tagline';
+            $valueColumns[] = ':business_tagline';
+        }
+
+        $updateColumns = [
+            'shop_name',
+            'shop_address',
+            'shop_phone',
+            'shop_tax_id',
+            'currency_code',
+            'currency_symbol',
+            'tax_rate_percent',
+            'receipt_header',
+            'receipt_footer',
+            'theme_accent_primary',
+            'theme_accent_secondary',
+        ];
+
+        if ($supportsLogo) {
+            $updateColumns[] = 'shop_logo_url';
+        }
+
+        if ($supportsTagline) {
+            $updateColumns[] = 'business_tagline';
+        }
+
+        $assignments = [];
+        foreach ($updateColumns as $column) {
+            $assignments[] = $column . ' = VALUES(' . $column . ')';
+        }
+
+        $sql = 'INSERT INTO shop_settings (' . implode(', ', $insertColumns) . ')
+                VALUES (' . implode(', ', $valueColumns) . ')
+                ON DUPLICATE KEY UPDATE ' . implode(', ', $assignments);
 
         $statement = $pdo->prepare($sql);
-        $statement->execute([
+        $params = [
             ':shop_name' => (string) $data['shop_name'],
             ':shop_address' => (string) ($data['shop_address'] ?? ''),
             ':shop_phone' => (string) ($data['shop_phone'] ?? ''),
@@ -88,7 +180,17 @@ final class ShopSettings
             ':receipt_footer' => (string) ($data['receipt_footer'] ?? ''),
             ':theme_accent_primary' => strtoupper((string) $data['theme_accent_primary']),
             ':theme_accent_secondary' => strtoupper((string) $data['theme_accent_secondary']),
-        ]);
+        ];
+
+        if ($supportsLogo) {
+            $params[':shop_logo_url'] = (string) ($data['shop_logo_url'] ?? '');
+        }
+
+        if ($supportsTagline) {
+            $params[':business_tagline'] = (string) ($data['business_tagline'] ?? '');
+        }
+
+        $statement->execute($params);
     }
 
     public static function taxRatePercent(): float
@@ -97,3 +199,4 @@ final class ShopSettings
         return (float) ($settings['tax_rate_percent'] ?? 8.0);
     }
 }
+

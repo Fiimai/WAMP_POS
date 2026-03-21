@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ShopSettings;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\InventoryMovementRepository;
+use PDO;
 use Throwable;
 
 final class CartController
@@ -91,6 +92,11 @@ final class CartController
         $taxRate = $taxRatePercent / 100;
 
         $pdo = Database::connection();
+
+        $auditSafetyMessage = $this->checkoutAuditSafetyMessage($pdo);
+        if ($auditSafetyMessage !== null) {
+            return ['ok' => false, 'message' => $auditSafetyMessage];
+        }
 
         try {
             $pdo->beginTransaction();
@@ -278,4 +284,42 @@ final class CartController
     {
         return ShopSettings::taxRatePercent();
     }
+
+    private function checkoutAuditSafetyMessage(PDO $pdo): ?string
+    {
+        $statement = $pdo->query(
+            'SELECT NOW() AS db_now, MAX(sold_at) AS latest_sale_at
+             FROM sales'
+        );
+
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ($row === false) {
+            return null;
+        }
+
+        $dbNowRaw = (string) ($row['db_now'] ?? '');
+        $latestSaleRaw = (string) ($row['latest_sale_at'] ?? '');
+        if ($dbNowRaw === '' || $latestSaleRaw === '') {
+            return null;
+        }
+
+        $dbNow = strtotime($dbNowRaw);
+        $latestSale = strtotime($latestSaleRaw);
+        if ($dbNow === false || $latestSale === false) {
+            return null;
+        }
+
+        if ($latestSale > ($dbNow + 300)) {
+            return 'Checkout blocked: POS time check failed (sales are recorded in the future). Verify date/time before continuing.';
+        }
+
+        $dbYearMonth = date('Y-m', $dbNow);
+        $latestYearMonth = date('Y-m', $latestSale);
+        if ($latestYearMonth > $dbYearMonth) {
+            return 'Checkout blocked: detected future-month sales data. Resolve period timing before new checkout to protect audit insights.';
+        }
+
+        return null;
+    }
 }
+

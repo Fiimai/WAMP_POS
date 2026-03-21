@@ -197,10 +197,7 @@ try {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= e($shopName) ?> Receipt History</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
@@ -218,20 +215,68 @@ try {
       -webkit-backdrop-filter: blur(18px);
       border: 1px solid rgba(255, 255, 255, 0.14);
     }
+
+    .skip-link {
+      position: fixed;
+      left: 0.75rem;
+      top: 0.75rem;
+      z-index: 80;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.92);
+      color: #e2e8f0;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transform: translateY(-140%);
+      transition: transform 180ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 1px;
+    }
+
+    .utility-link {
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.5);
+      color: #dbeafe;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: background-color 170ms ease, border-color 170ms ease;
+    }
+
+    .utility-link:hover {
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .utility-link:focus-visible,
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
+    }
   </style>
 </head>
 <body class="text-slate-100 antialiased">
-  <main class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
-    <header class="mb-5 flex flex-wrap items-center justify-between gap-3">
+  <a href="#mainContent" class="skip-link">Skip to receipt history content</a>
+  <main id="mainContent" class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+    <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
-        <p class="font-display text-xs uppercase tracking-[0.28em] text-cyan-300">NovaPOS</p>
+        <p class="font-display text-xs uppercase tracking-[0.28em] text-cyan-300"><?= e(strtoupper($shopName) . ' POS') ?></p>
         <h1 class="font-display text-2xl font-semibold text-white sm:text-3xl">Receipt History</h1>
         <p class="text-xs text-slate-300">Signed in as <?= e((string) $currentUser['full_name']) ?> (<?= e((string) $currentUser['role']) ?>)</p>
       </div>
-      <div class="flex gap-2">
-        <a href="index.php" class="rounded-xl border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Back to Checkout</a>
+      <div class="flex flex-wrap gap-2" aria-label="Receipt history navigation">
+        <a href="index.php" class="utility-link">Back to Checkout</a>
         <?php if ((string) $currentUser['role'] !== 'cashier'): ?>
-          <a href="dashboard.php" class="rounded-xl border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Dashboard</a>
+          <a href="dashboard.php" class="utility-link">Dashboard</a>
         <?php endif; ?>
       </div>
     </header>
@@ -276,7 +321,7 @@ try {
         </label>
 
         <div class="sm:col-span-5 flex flex-wrap gap-2">
-          <button class="rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Apply Filters</button>
+          <button class="min-h-[42px] rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Apply Filters</button>
           <a href="receipt_history.php" class="rounded-xl border border-white/20 px-4 py-2 text-sm hover:bg-white/10">Reset</a>
           <?php if ($canExport): ?>
             <a href="receipt_history.php?<?= e(http_build_query($csvQuery)) ?>" class="rounded-xl border border-cyan-300/35 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20">Export CSV</a>
@@ -313,13 +358,13 @@ try {
             <?php foreach ($rows as $row): ?>
               <?php $saleId = (int) $row['id']; ?>
               <tr class="border-t border-white/10">
-                <td class="px-3 py-2 text-slate-200">#<?= $saleId ?></td>
+                <td class="px-3 py-2.5 text-slate-200">#<?= $saleId ?></td>
                 <td class="px-3 py-2 font-medium text-white"><?= e((string) $row['receipt_no']) ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['sold_at']) ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['cashier_name']) ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['payment_method']) ?></td>
-                <td class="px-3 py-2 text-right text-slate-100"><?= e($currencySymbol) ?><?= number_format((float) $row['total_amount'], 2) ?></td>
-                <td class="px-3 py-2">
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['sold_at']) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['cashier_name']) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['payment_method']) ?></td>
+                <td class="px-3 py-2.5 text-right text-slate-100"><?= e($currencySymbol) ?><?= number_format((float) $row['total_amount'], 2) ?></td>
+                <td class="px-3 py-2.5">
                   <div class="flex justify-end gap-2">
                     <a href="receipt.php?sale_id=<?= $saleId ?>" target="_blank" rel="noopener" class="rounded-lg border border-white/20 px-2 py-1 text-xs hover:bg-white/10">View</a>
                     <a href="receipt.php?sale_id=<?= $saleId ?>&print=1" target="_blank" rel="noopener" class="rounded-lg border border-cyan-300/35 bg-cyan-500/10 px-2 py-1 text-xs text-cyan-100 hover:bg-cyan-500/20">Print</a>
@@ -360,3 +405,6 @@ try {
   </main>
 </body>
 </html>
+
+
+
