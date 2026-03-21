@@ -18,7 +18,7 @@ if (Auth::check()) {
 $error = null;
 $username = trim((string) ($_POST['username'] ?? ''));
 $shopSettings = ShopSettings::get();
-$shopName = (string) ($shopSettings['shop_name'] ?? 'Khanun');
+$shopName = (string) ($shopSettings['shop_name'] ?? 'My Shop');
 $shopBrand = strtoupper($shopName) . ' POS';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
@@ -107,8 +107,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     :root {
       --ink: #14213d;
       --paper: #f6f5f1;
-      --salmon: #6fbfd8;
-      --mint: #8ad7c1;
+      --salmon: #4a7f52;
+      --mint: #9ad8a6;
       --blue: #4f7cac;
       --line: rgba(20, 33, 61, 0.14);
     }
@@ -152,16 +152,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     .login-form-panel {
       background:
-        radial-gradient(circle at 12% 8%, rgba(79, 124, 172, 0.17), transparent 34%),
-        radial-gradient(circle at 92% 94%, rgba(125, 211, 252, 0.2), transparent 38%),
-        linear-gradient(160deg, rgba(250, 253, 255, 0.74) 0%, rgba(240, 247, 255, 0.9) 46%, rgba(235, 245, 252, 0.92) 100%);
+        radial-gradient(circle at 12% 8%, rgba(74, 127, 82, 0.2), transparent 34%),
+        radial-gradient(circle at 92% 94%, rgba(154, 216, 166, 0.22), transparent 38%),
+        linear-gradient(160deg, rgba(250, 255, 249, 0.78) 0%, rgba(239, 249, 240, 0.92) 46%, rgba(229, 243, 233, 0.94) 100%);
     }
 
     body[data-theme='dark'] .login-form-panel {
       background:
-        radial-gradient(circle at 12% 8%, rgba(125, 211, 252, 0.18), transparent 34%),
-        radial-gradient(circle at 92% 94%, rgba(129, 140, 248, 0.14), transparent 38%),
-        linear-gradient(165deg, rgba(10, 18, 34, 0.92) 0%, rgba(15, 23, 42, 0.94) 48%, rgba(2, 6, 23, 0.96) 100%);
+        radial-gradient(circle at 12% 8%, rgba(74, 127, 82, 0.28), transparent 34%),
+        radial-gradient(circle at 92% 94%, rgba(154, 216, 166, 0.18), transparent 38%),
+        linear-gradient(165deg, rgba(10, 24, 15, 0.93) 0%, rgba(14, 34, 24, 0.95) 48%, rgba(8, 20, 14, 0.97) 100%);
     }
 
     .float-in {

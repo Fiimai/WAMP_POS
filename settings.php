@@ -1202,6 +1202,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       loadLanguagePreference();
     })();
   </script>
+  <?php require __DIR__ . '/app/Views/partials/support-card.php'; ?>
 </body>
 </html>
 

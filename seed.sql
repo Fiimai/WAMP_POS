@@ -18,7 +18,7 @@ INSERT INTO shop_settings (
 )
 SELECT
   1,
-  'Khanun',
+  'My Shop',
   '',
   'Retail made gracious and fast',
   '123 Market Street',
