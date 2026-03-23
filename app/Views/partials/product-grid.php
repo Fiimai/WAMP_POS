@@ -22,7 +22,7 @@ $imageFallbacks = [
 
   <?php foreach ($products as $index => $product): ?>
     <?php
-    $image = $imageFallbacks[$index % count($imageFallbacks)];
+    $image = $product['image_path'] ?? $imageFallbacks[$index % count($imageFallbacks)];
     $name = (string) $product['name'];
     $category = (string) $product['category_name'];
     $price = (float) $product['unit_price'];

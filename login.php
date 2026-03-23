@@ -105,20 +105,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
   <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
   <style>
     :root {
-      --ink: #14213d;
-      --paper: #f6f5f1;
-      --salmon: #4a7f52;
-      --mint: #9ad8a6;
-      --blue: #4f7cac;
-      --line: rgba(20, 33, 61, 0.14);
+      --ink: #1e40af;
+      --paper: #ffffff;
+      --salmon: #ff6b35;
+      --mint: #00d4aa;
+      --blue: #3b82f6;
+      --line: rgba(30, 64, 175, 0.2);
     }
 
     body {
       font-family: 'Montserrat', 'Lato', 'Segoe UI', Tahoma, Arial, sans-serif;
       background:
-        radial-gradient(circle at 8% 15%, rgba(138, 215, 193, 0.56), transparent 28%),
-        radial-gradient(circle at 85% 82%, rgba(111, 191, 216, 0.46), transparent 34%),
-        linear-gradient(140deg, #edf6fb 0%, #e9f2fb 58%, #edf4fa 100%);
+        radial-gradient(circle at 8% 15%, rgba(0, 212, 170, 0.7), transparent 28%),
+        radial-gradient(circle at 85% 82%, rgba(255, 107, 53, 0.6), transparent 34%),
+        linear-gradient(140deg, #e0f2fe 0%, #bae6fd 58%, #dbeafe 100%);
       color: var(--ink);
     }
 
@@ -145,16 +145,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     .hero-stripes {
       background-image:
-        linear-gradient(30deg, rgba(79, 124, 172, 0.12) 12%, transparent 12.5%, transparent 87%, rgba(79, 124, 172, 0.12) 87.5%),
-        linear-gradient(150deg, rgba(111, 191, 216, 0.13) 12%, transparent 12.5%, transparent 87%, rgba(111, 191, 216, 0.13) 87.5%);
+        linear-gradient(30deg, rgba(59, 130, 246, 0.18) 12%, transparent 12.5%, transparent 87%, rgba(59, 130, 246, 0.18) 87.5%),
+        linear-gradient(150deg, rgba(255, 107, 53, 0.16) 12%, transparent 12.5%, transparent 87%, rgba(255, 107, 53, 0.16) 87.5%);
       background-size: 20px 35px;
     }
 
     .login-form-panel {
       background:
-        radial-gradient(circle at 12% 8%, rgba(74, 127, 82, 0.2), transparent 34%),
-        radial-gradient(circle at 92% 94%, rgba(154, 216, 166, 0.22), transparent 38%),
-        linear-gradient(160deg, rgba(250, 255, 249, 0.78) 0%, rgba(239, 249, 240, 0.92) 46%, rgba(229, 243, 233, 0.94) 100%);
+        radial-gradient(circle at 12% 8%, rgba(59, 130, 246, 0.25), transparent 34%),
+        radial-gradient(circle at 92% 94%, rgba(0, 212, 170, 0.28), transparent 38%),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.85) 0%, rgba(219, 234, 254, 0.95) 46%, rgba(186, 230, 253, 0.97) 100%);
     }
 
     body[data-theme='dark'] .login-form-panel {

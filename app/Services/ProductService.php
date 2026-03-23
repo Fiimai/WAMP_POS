@@ -13,11 +13,11 @@ final class ProductService
     {
     }
 
-    public function addProduct(string $productName, string $sku, float $price, int $stockQuantity, int $categoryId): int
+    public function addProduct(string $productName, string $sku, float $price, int $stockQuantity, int $categoryId, ?string $imagePath = null): int
     {
         $this->validateInput($productName, $sku, $price, $stockQuantity, $categoryId);
 
-        return $this->products->create(trim($productName), trim($sku), $price, $stockQuantity, $categoryId);
+        return $this->products->create(trim($productName), trim($sku), $price, $stockQuantity, $categoryId, $imagePath);
     }
 
     /**
@@ -40,7 +40,7 @@ final class ProductService
         return $this->products->findById($id);
     }
 
-    public function editProduct(int $id, string $productName, string $sku, float $price, int $stockQuantity, int $categoryId): void
+    public function editProduct(int $id, string $productName, string $sku, float $price, int $stockQuantity, int $categoryId, ?string $imagePath = null): void
     {
         if ($id < 1) {
             throw new InvalidArgumentException('Invalid product id.');
@@ -48,7 +48,7 @@ final class ProductService
 
         $this->validateInput($productName, $sku, $price, $stockQuantity, $categoryId);
 
-        $ok = $this->products->update($id, trim($productName), trim($sku), $price, $stockQuantity, $categoryId);
+        $ok = $this->products->update($id, trim($productName), trim($sku), $price, $stockQuantity, $categoryId, $imagePath);
         if (!$ok) {
             throw new InvalidArgumentException('Failed to update product.');
         }

@@ -41,13 +41,13 @@ final class ProductRepository
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function create(string $productName, string $sku, float $price, int $stockQuantity, int $categoryId): int
+    public function create(string $productName, string $sku, float $price, int $stockQuantity, int $categoryId, ?string $imagePath = null): int
     {
         $pdo = Database::getInstance()->getConnection();
 
         $statement = $pdo->prepare(
-            'INSERT INTO products (category_id, sku, name, unit_price, stock_qty, reorder_level, is_active)
-             VALUES (:category_id, :sku, :name, :unit_price, :stock_qty, 0, 1)'
+            'INSERT INTO products (category_id, sku, name, unit_price, stock_qty, reorder_level, image_path, is_active)
+             VALUES (:category_id, :sku, :name, :unit_price, :stock_qty, 0, :image_path, 1)'
         );
 
         $statement->bindValue(':category_id', $categoryId, PDO::PARAM_INT);
@@ -55,6 +55,7 @@ final class ProductRepository
         $statement->bindValue(':name', $productName, PDO::PARAM_STR);
         $statement->bindValue(':unit_price', $price);
         $statement->bindValue(':stock_qty', $stockQuantity, PDO::PARAM_INT);
+        $statement->bindValue(':image_path', $imagePath, PDO::PARAM_STR);
         $statement->execute();
 
         return (int) $pdo->lastInsertId();
@@ -80,7 +81,7 @@ final class ProductRepository
         return $row === false ? null : $row;
     }
 
-    public function update(int $id, string $productName, string $sku, float $price, int $stockQuantity, int $categoryId): bool
+    public function update(int $id, string $productName, string $sku, float $price, int $stockQuantity, int $categoryId, ?string $imagePath = null): bool
     {
         $pdo = Database::getInstance()->getConnection();
         $statement = $pdo->prepare(
@@ -89,7 +90,8 @@ final class ProductRepository
                  sku = :sku,
                  name = :name,
                  unit_price = :unit_price,
-                 stock_qty = :stock_qty
+                 stock_qty = :stock_qty,
+                 image_path = :image_path
              WHERE id = :id'
         );
 
@@ -98,6 +100,7 @@ final class ProductRepository
         $statement->bindValue(':name', $productName, PDO::PARAM_STR);
         $statement->bindValue(':unit_price', $price);
         $statement->bindValue(':stock_qty', $stockQuantity, PDO::PARAM_INT);
+        $statement->bindValue(':image_path', $imagePath, PDO::PARAM_STR);
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
 
         return $statement->execute();

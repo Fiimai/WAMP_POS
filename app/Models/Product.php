@@ -13,7 +13,7 @@ final class Product
     {
         $pdo = Database::connection();
 
-        $sql = 'SELECT p.id, p.name, p.barcode, p.sku, p.unit_price, p.stock_qty, c.name AS category_name
+        $sql = 'SELECT p.id, p.name, p.barcode, p.sku, p.unit_price, p.stock_qty, p.image_path, c.name AS category_name
                 FROM products p
                 INNER JOIN categories c ON c.id = p.category_id
                 WHERE p.is_active = 1';
@@ -39,7 +39,7 @@ final class Product
     public static function findById(int $id): ?array
     {
         $pdo = Database::connection();
-        $statement = $pdo->prepare('SELECT id, name, unit_price, stock_qty, is_active FROM products WHERE id = :id LIMIT 1');
+        $statement = $pdo->prepare('SELECT id, name, unit_price, stock_qty, image_path, is_active FROM products WHERE id = :id LIMIT 1');
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
         $statement->execute();
 

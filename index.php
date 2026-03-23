@@ -211,14 +211,14 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     }
 
     body[data-theme='light'] {
-      --bg-base: #eef3fb;
-      --bg-glow-1: rgba(14, 165, 233, 0.18);
-      --bg-glow-2: rgba(16, 185, 129, 0.14);
-      --bg-glow-3: rgba(244, 114, 182, 0.12);
-      --glass-top: rgba(255, 255, 255, 0.88);
-      --glass-bottom: rgba(255, 255, 255, 0.72);
-      --glass-border: rgba(15, 23, 42, 0.12);
-      color: #0f172a;
+      --bg-base: #dbeafe;
+      --bg-glow-1: rgba(59, 130, 246, 0.2);
+      --bg-glow-2: rgba(0, 212, 170, 0.18);
+      --bg-glow-3: rgba(255, 107, 53, 0.16);
+      --glass-top: rgba(255, 255, 255, 0.95);
+      --glass-bottom: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(30, 64, 175, 0.15);
+      color: #1e40af;
     }
 
     body[data-theme='light'] .text-white,

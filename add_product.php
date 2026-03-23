@@ -9,6 +9,8 @@ use App\Core\RateLimiter;
 use App\Repositories\CategoryRepository;
 use App\Services\ProductService;
 use App\Repositories\ProductRepository;
+use InvalidArgumentException;
+use RuntimeException;
 
 $currentUser = Auth::requirePageAuth(['admin']);
 
@@ -25,6 +27,33 @@ $form = [
     'stock_quantity' => '0',
     'category_id' => '',
 ];
+
+function handleImageUpload(array $file): string
+{
+    // Validate file type
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!in_array($file['type'], $allowedTypes)) {
+        throw new InvalidArgumentException('Invalid image type. Only JPG, PNG, GIF, and WebP are allowed.');
+    }
+
+    // Validate file size (2MB max)
+    $maxSize = 2 * 1024 * 1024; // 2MB
+    if ($file['size'] > $maxSize) {
+        throw new InvalidArgumentException('Image file is too large. Maximum size is 2MB.');
+    }
+
+    // Generate unique filename
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = uniqid('product_', true) . '.' . $extension;
+    $uploadPath = __DIR__ . '/assets/images/products/' . $filename;
+
+    // Move uploaded file
+    if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        throw new RuntimeException('Failed to save uploaded image.');
+    }
+
+    return 'assets/images/products/' . $filename;
+}
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $ip = Auth::clientIp();
@@ -49,6 +78,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'category_id' => trim((string) ($_POST['category_id'] ?? '')),
     ];
 
+    $imagePath = null;
+    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+        $imagePath = $this->handleImageUpload($_FILES['product_image']);
+    }
+
     $price = (float) $form['price'];
     $stockQuantity = (int) $form['stock_quantity'];
     $categoryId = (int) $form['category_id'];
@@ -56,7 +90,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if ($errors === []) {
         try {
             $service = new ProductService(new ProductRepository());
-            $newId = $service->addProduct($form['product_name'], $form['sku'], $price, $stockQuantity, $categoryId);
+            $newId = $service->addProduct($form['product_name'], $form['sku'], $price, $stockQuantity, $categoryId, $imagePath);
             $success = 'Product created successfully (ID ' . $newId . ').';
             $form = [
                 'product_name' => '',
@@ -86,6 +120,67 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         radial-gradient(circle at 15% 10%, rgba(34, 211, 238, 0.2), transparent 28%),
         radial-gradient(circle at 80% 90%, rgba(251, 113, 133, 0.14), transparent 25%),
         #070b14;
+    }
+
+    body[data-theme='light'] {
+      background:
+        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.2), transparent 28%),
+        radial-gradient(circle at 80% 90%, rgba(255, 107, 53, 0.18), transparent 25%),
+        #dbeafe;
+      color: #1e40af;
+    }
+
+    body[data-theme='light'] .text-white,
+    body[data-theme='light'] .text-slate-100,
+    body[data-theme='light'] .text-slate-200 {
+      color: #0f172a !important;
+    }
+
+    body[data-theme='light'] .text-slate-300,
+    body[data-theme='light'] .text-slate-400 {
+      color: #334155 !important;
+    }
+
+    body[data-theme='light'] .bg-slate-900\/60,
+    body[data-theme='light'] .bg-slate-900\/50,
+    body[data-theme='light'] .bg-slate-900\/35,
+    body[data-theme='light'] .bg-slate-900\/30,
+    body[data-theme='light'] .bg-slate-900\/45,
+    body[data-theme='light'] .bg-slate-900\/65 {
+      background-color: rgba(255, 255, 255, 0.74) !important;
+    }
+
+    body[data-theme='light'] .border-white\/10,
+    body[data-theme='light'] .border-white\/15 {
+      border-color: rgba(15, 23, 42, 0.16) !important;
+    }
+
+    body[data-theme='light'] .utility-link {
+      border-color: rgba(51, 65, 85, 0.24);
+      background: rgba(241, 245, 249, 0.95);
+      color: #0f172a;
+    }
+
+    body[data-theme='light'] .utility-link:hover {
+      border-color: rgba(59, 130, 246, 0.45);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    body[data-theme='light'] .text-rose-100 {
+      color: #b91c1c !important;
+    }
+
+    body[data-theme='light'] .bg-rose-500\/10 {
+      background-color: rgba(254, 226, 226, 0.75) !important;
+    }
+
+    body[data-theme='light'] .text-emerald-100,
+    body[data-theme='light'] .text-emerald-200 {
+      color: #047857 !important;
+    }
+
+    body[data-theme='light'] .bg-emerald-500\/10 {
+      background-color: rgba(209, 250, 229, 0.75) !important;
     }
 
     .skip-link {
@@ -166,7 +261,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       </div>
     <?php endif; ?>
 
-    <form method="post" class="space-y-4 rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
+    <form method="post" enctype="multipart/form-data" class="space-y-4 rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
       <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['csrf_token']) ?>" />
 
       <label class="block text-sm">
@@ -231,6 +326,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           />
         </label>
       </div>
+
+      <label class="block text-sm">
+        <span class="mb-1 block text-slate-300">Product Image (optional)</span>
+        <input
+          type="file"
+          name="product_image"
+          accept="image/*"
+          class="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 outline-none focus:border-cyan-300 file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:bg-cyan-500/20 file:text-cyan-300 file:font-semibold hover:file:bg-cyan-500/30"
+        />
+        <span class="text-xs text-slate-400 mt-1 block">Accepted formats: JPG, PNG, GIF, WebP. Max size: 2MB</span>
+      </label>
 
       <div class="pt-2">
         <button class="min-h-[42px] rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Create Product</button>

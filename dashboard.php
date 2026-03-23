@@ -175,10 +175,10 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
 
     body[data-theme='light'] {
       background:
-        radial-gradient(circle at 8% 10%, rgba(14, 165, 233, 0.14), transparent 32%),
-        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 30%),
-        #eef2ff;
-      color: #0f172a;
+        radial-gradient(circle at 8% 10%, rgba(59, 130, 246, 0.2), transparent 32%),
+        radial-gradient(circle at 85% 90%, rgba(255, 107, 53, 0.18), transparent 30%),
+        #dbeafe;
+      color: #1e40af;
     }
 
     body[data-theme='light'] .text-white,

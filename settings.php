@@ -428,10 +428,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     body[data-theme='light'] {
       background:
-        radial-gradient(circle at 15% 10%, rgba(14, 165, 233, 0.14), transparent 28%),
-        radial-gradient(circle at 80% 90%, rgba(236, 72, 153, 0.1), transparent 25%),
-        #eef2ff;
-      color: #0f172a;
+        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.2), transparent 28%),
+        radial-gradient(circle at 80% 90%, rgba(255, 107, 53, 0.18), transparent 25%),
+        #dbeafe;
+      color: #1e40af;
     }
 
     body[data-theme='light'] .text-slate-100,

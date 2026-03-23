@@ -154,6 +154,67 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         #070b14;
     }
 
+    body[data-theme='light'] {
+      background:
+        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.2), transparent 28%),
+        radial-gradient(circle at 80% 90%, rgba(255, 107, 53, 0.18), transparent 25%),
+        #dbeafe;
+      color: #1e40af;
+    }
+
+    body[data-theme='light'] .text-white,
+    body[data-theme='light'] .text-slate-100,
+    body[data-theme='light'] .text-slate-200 {
+      color: #0f172a !important;
+    }
+
+    body[data-theme='light'] .text-slate-300,
+    body[data-theme='light'] .text-slate-400 {
+      color: #334155 !important;
+    }
+
+    body[data-theme='light'] .bg-slate-900\/60,
+    body[data-theme='light'] .bg-slate-900\/50,
+    body[data-theme='light'] .bg-slate-900\/35,
+    body[data-theme='light'] .bg-slate-900\/30,
+    body[data-theme='light'] .bg-slate-900\/45,
+    body[data-theme='light'] .bg-slate-900\/65 {
+      background-color: rgba(255, 255, 255, 0.74) !important;
+    }
+
+    body[data-theme='light'] .border-white\/10,
+    body[data-theme='light'] .border-white\/15 {
+      border-color: rgba(15, 23, 42, 0.16) !important;
+    }
+
+    body[data-theme='light'] .utility-link {
+      border-color: rgba(51, 65, 85, 0.24);
+      background: rgba(241, 245, 249, 0.95);
+      color: #0f172a;
+    }
+
+    body[data-theme='light'] .utility-link:hover {
+      border-color: rgba(59, 130, 246, 0.45);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    body[data-theme='light'] .text-rose-100 {
+      color: #b91c1c !important;
+    }
+
+    body[data-theme='light'] .bg-rose-500\/10 {
+      background-color: rgba(254, 226, 226, 0.75) !important;
+    }
+
+    body[data-theme='light'] .text-emerald-100,
+    body[data-theme='light'] .text-emerald-200 {
+      color: #047857 !important;
+    }
+
+    body[data-theme='light'] .bg-emerald-500\/10 {
+      background-color: rgba(209, 250, 229, 0.75) !important;
+    }
+
     .skip-link {
       position: fixed;
       left: 0.75rem;
