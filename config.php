@@ -5,7 +5,9 @@ declare(strict_types=1);
 $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? ''));
 $serverAddr = (string) ($_SERVER['SERVER_ADDR'] ?? '');
 
-$isLocalhost = in_array($host, ['localhost', '127.0.0.1', '::1'], true)
+$isCli = PHP_SAPI === 'cli';
+$isLocalhost = $isCli
+    || in_array($host, ['localhost', '127.0.0.1', '::1'], true)
     || str_ends_with($host, '.local')
     || in_array($serverAddr, ['127.0.0.1', '::1'], true);
 

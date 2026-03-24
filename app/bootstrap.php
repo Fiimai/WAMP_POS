@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-// Check for maintenance mode
+// Check for maintenance mode (skip for CLI)
 $maintenanceFile = dirname(__DIR__) . '/maintenance.flag';
-if (file_exists($maintenanceFile)) {
+if (PHP_SAPI !== 'cli' && file_exists($maintenanceFile)) {
     require dirname(__DIR__) . '/maintenance.php';
 }
 

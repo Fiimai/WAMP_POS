@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace App\Core;
+
 /**
  * Database Migration System
  * Handles schema updates and data migrations safely
@@ -9,10 +11,10 @@ declare(strict_types=1);
 
 class MigrationManager
 {
-    private PDO $pdo;
+    private \PDO $pdo;
     private string $migrationsTable = 'schema_migrations';
 
-    public function __construct(PDO $pdo)
+    public function __construct(\PDO $pdo)
     {
         $this->pdo = $pdo;
         $this->ensureMigrationsTable();
@@ -22,7 +24,7 @@ class MigrationManager
     {
         $this->pdo->exec("
             CREATE TABLE IF NOT EXISTS {$this->migrationsTable} (
-                id VARCHAR(255) PRIMARY KEY,
+                id VARCHAR(100) PRIMARY KEY,
                 batch INT NOT NULL,
                 executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -71,7 +73,7 @@ class MigrationManager
     private function getNextBatch(): int
     {
         $stmt = $this->pdo->query("SELECT MAX(batch) as max_batch FROM {$this->migrationsTable}");
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         return (int)($result['max_batch'] ?? 0) + 1;
     }
 
