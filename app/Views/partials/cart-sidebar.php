@@ -12,6 +12,12 @@
         <span data-i18n="subtotal">Subtotal</span>
         <span id="subtotal">$0.00</span>
       </div>
+      <?php if ($enableDiscounts ?? false): ?>
+      <div class="flex items-center justify-between text-slate-300">
+        <label for="discountAmount" data-i18n="discount">Discount</label>
+        <input id="discountAmount" type="number" step="0.01" min="0" class="w-20 rounded border border-white/20 bg-slate-800 px-2 py-1 text-right text-sm text-white" value="0.00">
+      </div>
+      <?php endif; ?>
       <div class="flex items-center justify-between text-slate-300">
         <span id="taxLabel" data-i18n="tax">Tax</span>
         <span id="tax">$0.00</span>

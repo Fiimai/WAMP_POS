@@ -74,7 +74,7 @@ final class CartController
         return ['ok' => true, 'message' => 'Cart cleared', 'cart' => $this->withTotals([])];
     }
 
-    public function checkout(int $cashierUserId, string $paymentMethod = 'cash'): array
+    public function checkout(int $cashierUserId, string $paymentMethod = 'cash', float $discountAmount = 0): array
     {
         $allowedMethods = ['cash', 'card', 'mobile', 'mixed'];
         if (!in_array($paymentMethod, $allowedMethods, true)) {
@@ -146,20 +146,22 @@ final class CartController
                 0.0
             );
             $subtotal = round($subtotal, 2);
-            $tax = round($subtotal * $taxRate, 2);
-            $total = round($subtotal + $tax, 2);
+            $discountedSubtotal = max(0, $subtotal - $discountAmount);
+            $tax = round($discountedSubtotal * $taxRate, 2);
+            $total = round($discountedSubtotal + $tax, 2);
 
             $receiptNo = 'RCP-' . date('YmdHis') . '-' . random_int(1000, 9999);
 
             $saleStmt = $pdo->prepare(
                 'INSERT INTO sales (receipt_no, cashier_user_id, sold_at, subtotal, tax_amount, discount_amount, total_amount, payment_method)
-                 VALUES (:receipt_no, :cashier_user_id, NOW(), :subtotal, :tax_amount, 0, :total_amount, :payment_method)'
+                 VALUES (:receipt_no, :cashier_user_id, NOW(), :subtotal, :tax_amount, :discount_amount, :total_amount, :payment_method)'
             );
             $saleStmt->execute([
                 ':receipt_no' => $receiptNo,
                 ':cashier_user_id' => $cashierUserId,
                 ':subtotal' => $subtotal,
                 ':tax_amount' => $tax,
+                ':discount_amount' => $discountAmount,
                 ':total_amount' => $total,
                 ':payment_method' => $paymentMethod,
             ]);

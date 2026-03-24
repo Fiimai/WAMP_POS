@@ -33,10 +33,11 @@ if (!is_array($payload)) {
 }
 
 $paymentMethod = (string) ($payload['payment_method'] ?? 'cash');
+$discountAmount = (float) ($payload['discount_amount'] ?? 0);
 
 try {
     $controller = new CartController();
-    $result = $controller->checkout((int) $user['id'], $paymentMethod);
+    $result = $controller->checkout((int) $user['id'], $paymentMethod, $discountAmount);
 
     if (($result['ok'] ?? false) !== true) {
         http_response_code(422);

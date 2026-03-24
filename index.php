@@ -15,6 +15,11 @@ $currencySymbol = (string) ($shopSettings['currency_symbol'] ?? '$');
 $taxRatePercent = (float) ($shopSettings['tax_rate_percent'] ?? 8.0);
 $themePrimary = (string) ($shopSettings['theme_accent_primary'] ?? '#06B6D4');
 $themeSecondary = (string) ($shopSettings['theme_accent_secondary'] ?? '#22D3AA');
+$enableDiscounts = (bool) ($shopSettings['enable_discounts'] ?? false);
+$enableReturns = (bool) ($shopSettings['enable_returns'] ?? false);
+$enableMultiStore = (bool) ($shopSettings['enable_multi_store'] ?? false);
+$enableTimeClock = (bool) ($shopSettings['enable_time_clock'] ?? false);
+$enableEmailNotifications = (bool) ($shopSettings['enable_email_notifications'] ?? false);
 
 $search = trim((string) ($_GET['q'] ?? ''));
 $products = [];
@@ -680,6 +685,12 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       <?php endif; ?>
       <a href="receipt_history.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5 2h10a1 1 0 0 1 1 1v14l-2-1-2 1-2-1-2 1-2-1-2 1V3a1 1 0 0 1 1-1zm2 4v2h6V6zm0 4v2h6v-2z"/></svg><span data-i18n="receipts">Receipts</span></a>
       <a href="dashboard.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 3h6v6H3zm8 0h6v10h-6zM3 11h6v6H3zm8 4h6v2h-6z"/></svg><span data-i18n="qlDashboard">Dashboard</span></a>
+      <?php if ($enable_returns ?? false): ?>
+        <a href="returns.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 12l-6-6h4V2h4v4h4l-6 6z"/></svg><span data-i18n="returns">Returns</span></a>
+      <?php endif; ?>
+      <?php if ($enable_time_clock ?? false): ?>
+        <a href="time_clock.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-9h2v4H9V7z"/></svg><span data-i18n="timeClock">Time Clock</span></a>
+      <?php endif; ?>
       </div>
     </nav>
 
@@ -793,6 +804,14 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     const taxEl = document.getElementById('tax');
     const totalEl = document.getElementById('total');
     const clearCartBtn = document.getElementById('clearCart');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const currencySymbol = '<?= e($currencySymbol) ?>';
+    const taxRatePercent = <?= json_encode($taxRatePercent) ?>;
+    const enableDiscounts = <?= json_encode($enableDiscounts) ?>;
+    const enableReturns = <?= json_encode($enableReturns) ?>;
+    const enableMultiStore = <?= json_encode($enableMultiStore) ?>;
+    const enableTimeClock = <?= json_encode($enableTimeClock) ?>;
+    const enableEmailNotifications = <?= json_encode($enableEmailNotifications) ?>;
     const checkoutBtn = document.getElementById('checkoutBtn');
     const searchForm = document.getElementById('searchForm');
     const searchInput = document.getElementById('searchInput');
@@ -1724,10 +1743,13 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
         return;
       }
 
+      const discountAmount = enableDiscounts ? Number(document.getElementById('discountAmount')?.value || 0) : 0;
+
       await window.POSCheckout.processCheckout({
         endpoint: './api/checkout.php',
         csrfToken: CSRF_TOKEN,
         paymentMethod: 'cash',
+        discountAmount: discountAmount,
         confirmMessage: t('confirmCheckout'),
         onStart: () => {
           if (checkoutBtn) {

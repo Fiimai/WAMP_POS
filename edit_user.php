@@ -10,7 +10,6 @@ use App\Repositories\AuditLogRepository;
 use App\Repositories\UserRepository;
 use App\Services\UserAuthService;
 use App\Services\UserManagementService;
-use InvalidArgumentException;
 
 $currentUser = Auth::requirePageAuth(['admin']);
 Auth::requireCapability('users.manage');

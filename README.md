@@ -48,6 +48,29 @@ Use this section for a real first run of the current project.
 
 1. Create/import database in phpMyAdmin.
 
+## Production Deployment
+
+For production deployments and feature updates, see [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment strategies including:
+
+- Safe database migrations
+- Zero-downtime deployment options
+- Feature flag management
+- Rollback procedures
+- Gradual rollout strategies
+
+### Quick Deployment (Development)
+
+```bash
+# 1. Run database migrations
+php deploy.php
+
+# 2. Copy files to web root
+robocopy . C:\wamp64\www\pos-app /MIR /XD .git
+
+# 3. Access the application
+# http://localhost/pos-app/login.php
+```
+
 Import `schema.sql` first, then import `seed.sql`.
 
 1. Open the app:

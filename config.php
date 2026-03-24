@@ -79,6 +79,8 @@ if ($isLocalhost) {
     ini_set('display_errors', '1');
 }
 
+return ['db' => $resolved];
+
 return [
     'environment' => [
         'is_localhost' => $isLocalhost,

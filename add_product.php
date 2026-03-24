@@ -9,8 +9,6 @@ use App\Core\RateLimiter;
 use App\Repositories\CategoryRepository;
 use App\Services\ProductService;
 use App\Repositories\ProductRepository;
-use InvalidArgumentException;
-use RuntimeException;
 
 $currentUser = Auth::requirePageAuth(['admin']);
 
@@ -80,7 +78,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     $imagePath = null;
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
-        $imagePath = $this->handleImageUpload($_FILES['product_image']);
+        try {
+            $imagePath = handleImageUpload($_FILES['product_image']);
+        } catch (Throwable $throwable) {
+            $errors[] = 'Failed to upload image: ' . $throwable->getMessage();
+        }
     }
 
     $price = (float) $form['price'];

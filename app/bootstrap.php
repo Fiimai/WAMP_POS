@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+// Check for maintenance mode
+$maintenanceFile = dirname(__DIR__) . '/maintenance.flag';
+if (file_exists($maintenanceFile)) {
+    require dirname(__DIR__) . '/maintenance.php';
+}
+
 spl_autoload_register(static function (string $class): void {
     $prefix = 'App\\';
     $baseDir = __DIR__ . '/';

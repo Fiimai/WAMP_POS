@@ -205,6 +205,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'receipt_footer' => trim((string) ($_POST['receipt_footer'] ?? '')),
         'theme_accent_primary' => strtoupper(trim((string) ($_POST['theme_accent_primary'] ?? '#06B6D4'))),
         'theme_accent_secondary' => strtoupper(trim((string) ($_POST['theme_accent_secondary'] ?? '#22D3AA'))),
+        'enable_discounts' => ((string) ($_POST['enable_discounts'] ?? '')) === '1',
+        'enable_returns' => ((string) ($_POST['enable_returns'] ?? '')) === '1',
+        'enable_multi_store' => ((string) ($_POST['enable_multi_store'] ?? '')) === '1',
+        'enable_time_clock' => ((string) ($_POST['enable_time_clock'] ?? '')) === '1',
+        'enable_email_notifications' => ((string) ($_POST['enable_email_notifications'] ?? '')) === '1',
+        'smtp_host' => trim((string) ($_POST['smtp_host'] ?? '')),
+        'smtp_port' => (int) ($_POST['smtp_port'] ?? 587),
+        'smtp_username' => trim((string) ($_POST['smtp_username'] ?? '')),
+        'smtp_password' => trim((string) ($_POST['smtp_password'] ?? '')),
+        'smtp_encryption' => trim((string) ($_POST['smtp_encryption'] ?? 'tls')),
+        'email_from_address' => trim((string) ($_POST['email_from_address'] ?? '')),
+        'email_from_name' => trim((string) ($_POST['email_from_name'] ?? '')),
       ];
 
       if ($payload['currency_code'] === 'GHS') {
@@ -741,6 +753,79 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           <label class="text-sm"><span data-i18n="secondaryAccent">Secondary Accent</span>
             <input type="color" name="theme_accent_secondary" value="<?= e((string) ($settings['theme_accent_secondary'] ?? '#22D3AA')) ?>" class="mt-1 h-10 w-full rounded-lg border border-white/15 bg-slate-950/60 px-2 py-1" />
           </label>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold">Email Configuration</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="text-sm"><span>SMTP Host</span>
+            <input name="smtp_host" value="<?= e((string) ($settings['smtp_host'] ?? '')) ?>" placeholder="smtp.gmail.com" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
+          </label>
+          <label class="text-sm"><span>SMTP Port</span>
+            <input type="number" name="smtp_port" value="<?= e((string) ($settings['smtp_port'] ?? '587')) ?>" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
+          </label>
+          <label class="text-sm"><span>SMTP Username</span>
+            <input name="smtp_username" value="<?= e((string) ($settings['smtp_username'] ?? '')) ?>" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
+          </label>
+          <label class="text-sm"><span>SMTP Password</span>
+            <input type="password" name="smtp_password" value="<?= e((string) ($settings['smtp_password'] ?? '')) ?>" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
+          </label>
+          <label class="text-sm"><span>Encryption</span>
+            <select name="smtp_encryption" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2">
+              <option value="tls" <?= ((string) ($settings['smtp_encryption'] ?? 'tls')) === 'tls' ? 'selected' : '' ?>>TLS</option>
+              <option value="ssl" <?= ((string) ($settings['smtp_encryption'] ?? 'tls')) === 'ssl' ? 'selected' : '' ?>>SSL</option>
+              <option value="none" <?= ((string) ($settings['smtp_encryption'] ?? 'tls')) === 'none' ? 'selected' : '' ?>>None</option>
+            </select>
+          </label>
+          <label class="text-sm"><span>From Email Address</span>
+            <input type="email" name="email_from_address" value="<?= e((string) ($settings['email_from_address'] ?? '')) ?>" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
+          </label>
+          <label class="text-sm sm:col-span-2"><span>From Name</span>
+            <input name="email_from_name" value="<?= e((string) ($settings['email_from_name'] ?? '')) ?>" placeholder="Your Shop Name" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
+          </label>
+        </div>
+        <div class="mt-3">
+          <a href="test_email.php" class="text-cyan-400 hover:text-cyan-300 text-sm">Test Email Configuration →</a>
+        </div>
+      </section>
+        <h2 class="mb-3 text-lg font-semibold">Feature Toggles</h2>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between rounded-lg border border-white/10 bg-slate-950/40 p-4">
+            <span class="text-sm font-medium">Enable Discounts & Promotions</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="enable_discounts" value="1" <?= ((bool) ($settings['enable_discounts'] ?? false)) ? 'checked' : '' ?> class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-400 peer-checked:to-emerald-400"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between rounded-lg border border-white/10 bg-slate-950/40 p-4">
+            <span class="text-sm font-medium">Enable Returns & Refunds System</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="enable_returns" value="1" <?= ((bool) ($settings['enable_returns'] ?? false)) ? 'checked' : '' ?> class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-400 peer-checked:to-emerald-400"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between rounded-lg border border-white/10 bg-slate-950/40 p-4">
+            <span class="text-sm font-medium">Enable Multi-Store Support</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="enable_multi_store" value="1" <?= ((bool) ($settings['enable_multi_store'] ?? false)) ? 'checked' : '' ?> class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-400 peer-checked:to-emerald-400"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between rounded-lg border border-white/10 bg-slate-950/40 p-4">
+            <span class="text-sm font-medium">Enable Time Clock & Employee Management</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="enable_time_clock" value="1" <?= ((bool) ($settings['enable_time_clock'] ?? false)) ? 'checked' : '' ?> class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-400 peer-checked:to-emerald-400"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between rounded-lg border border-white/10 bg-slate-950/40 p-4">
+            <span class="text-sm font-medium">Enable Email Notifications</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" name="enable_email_notifications" value="1" <?= ((bool) ($settings['enable_email_notifications'] ?? false)) ? 'checked' : '' ?> class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-400 peer-checked:to-emerald-400"></div>
+            </label>
+          </div>
         </div>
       </section>
 
