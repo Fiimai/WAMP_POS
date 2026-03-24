@@ -47,14 +47,18 @@
     });
   }
 
-  function init() {
+  function init(options) {
     document.body.classList.add('y2k-global');
     markNeonText();
     markPrimaryButtons();
     markQuantumToggles();
     markSuccessStates();
     injectChromeLogo();
-    pulseGlitchOnce();
+
+    // Glitch is opt-in. Default behavior keeps the UI stable.
+    if (options && options.enableGlitch === true) {
+      pulseGlitchOnce();
+    }
   }
 
   window.NovaY2K = {
