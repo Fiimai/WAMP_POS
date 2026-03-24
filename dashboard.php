@@ -12,6 +12,7 @@ $currentUser = Auth::requirePageAuth(['admin', 'manager']);
 $shopSettings = ShopSettings::get();
 $shopName = (string) ($shopSettings['shop_name'] ?? 'My Shop');
 $currencySymbol = (string) ($shopSettings['currency_symbol'] ?? '$');
+$enableMultiStore = (bool) ($shopSettings['enable_multi_store'] ?? false);
 
 $todaySales = 0.0;
 $todayTransactions = 0;
@@ -166,18 +167,83 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
 
   <style>
     body {
+      --bg-base: #050912;
+      --bg-glow-1: rgba(34, 211, 238, 0.2);
+      --bg-glow-2: rgba(251, 113, 133, 0.16);
+      --glass-top: rgba(255, 255, 255, 0.11);
+      --glass-bottom: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.14);
       background:
-        radial-gradient(circle at 8% 10%, rgba(34, 211, 238, 0.2), transparent 32%),
-        radial-gradient(circle at 85% 90%, rgba(251, 113, 133, 0.16), transparent 30%),
-        #050912;
+        radial-gradient(circle at 8% 10%, var(--bg-glow-1), transparent 32%),
+        radial-gradient(circle at 85% 90%, var(--bg-glow-2), transparent 30%),
+        var(--bg-base);
       min-height: 100vh;
     }
 
+    .matrix-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image: radial-gradient(circle, rgba(125, 211, 252, 0.24) 1px, transparent 1.2px);
+      background-size: 24px 24px;
+      opacity: 0.24;
+      animation: matrixDrift 18s linear infinite;
+    }
+
+    .scanner-line {
+      position: fixed;
+      left: -20%;
+      width: 140%;
+      height: 1px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.3;
+      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.9), transparent);
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+      animation: scannerSweep 12s linear infinite;
+    }
+
+    .retro-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(1px);
+      opacity: 0.2;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.75), rgba(56, 189, 248, 0.2) 45%, transparent 72%);
+      animation: orbFloat 20s ease-in-out infinite;
+    }
+
+    .orb.orb-a {
+      width: 180px;
+      height: 180px;
+      left: -60px;
+      top: 18%;
+    }
+
+    .orb.orb-b {
+      width: 150px;
+      height: 150px;
+      right: -35px;
+      top: 26%;
+      animation-duration: 24s;
+      animation-delay: -6s;
+    }
+
     body[data-theme='light'] {
-      background:
-        radial-gradient(circle at 8% 10%, rgba(59, 130, 246, 0.2), transparent 32%),
-        radial-gradient(circle at 85% 90%, rgba(255, 107, 53, 0.18), transparent 30%),
-        #dbeafe;
+      --bg-base: #dbeafe;
+      --bg-glow-1: rgba(59, 130, 246, 0.2);
+      --bg-glow-2: rgba(255, 107, 53, 0.18);
+      --glass-top: rgba(255, 255, 255, 0.95);
+      --glass-bottom: rgba(255, 255, 255, 0.82);
+      --glass-border: rgba(15, 23, 42, 0.14);
       color: #1e40af;
     }
 
@@ -199,7 +265,7 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
     body[data-theme='light'] .bg-slate-900\/35,
     body[data-theme='light'] .bg-white\/10,
     body[data-theme='light'] .bg-cyan-500\/15 {
-      background-color: rgba(255, 255, 255, 0.9) !important;
+      background-color: rgba(255, 255, 255, 0.82) !important;
     }
 
     body[data-theme='light'] .border-white\/10,
@@ -229,6 +295,12 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       color: #0f172a;
     }
 
+    body[data-theme='light'] .theme-toggle {
+      color: #0f172a;
+      border-color: rgba(15, 23, 42, 0.22);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
     body[data-theme='light'] .text-mint {
       color: #047857 !important;
     }
@@ -241,18 +313,18 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
 
     body[data-theme='light'] .bg-rose-500\/10,
     body[data-theme='light'] .bg-rose-500\/20 {
-      background-color: rgba(254, 226, 226, 0.75) !important;
+      background-color: rgba(254, 226, 226, 0.68) !important;
     }
 
-    body[data-theme='light'] select,
-    body[data-theme='light'] button,
-    body[data-theme='light'] a {
-      color: #0f172a;
+    body[data-theme='light'] .switcher-select,
+    body[data-theme='light'] .utility-link,
+    body[data-theme='light'] .skip-link {
+      color: #0f172a !important;
     }
 
     .glass {
-      background: linear-gradient(140deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03));
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: linear-gradient(140deg, var(--glass-top), var(--glass-bottom));
+      border: 1px solid var(--glass-border);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
     }
@@ -277,6 +349,12 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       transform: translateY(0);
       outline: 2px solid rgba(125, 211, 252, 0.7);
       outline-offset: 1px;
+    }
+
+    body[data-theme='light'] .skip-link {
+      border-color: rgba(15, 23, 42, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      color: #0f172a;
     }
 
     .utility-link {
@@ -342,6 +420,35 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       color: #f8fafc;
     }
 
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.45);
+      color: #f8fafc;
+      transition: transform 150ms ease, border-color 150ms ease, background-color 150ms ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-1px);
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
+    }
+
+    .theme-toggle svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
     .switcher-label {
       font-size: 0.68rem;
       font-weight: 700;
@@ -404,6 +511,12 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       animation: metric-card-shimmer 1.8s ease-in-out;
     }
 
+    .ambient-paused .matrix-grid,
+    .ambient-paused .scanner-line,
+    .ambient-paused .orb {
+      animation: none !important;
+    }
+
     @keyframes metric-card-shimmer {
       0% {
         transform: translateX(-65%) rotate(6deg);
@@ -414,15 +527,35 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       }
     }
 
-    body[data-theme='light'] .glass {
-      background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.76));
-      border-color: rgba(15, 23, 42, 0.14);
+    @keyframes matrixDrift {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-24px, -24px, 0); }
+    }
+
+    @keyframes scannerSweep {
+      0% { top: -8%; }
+      100% { top: 108%; }
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(0, -18px, 0) scale(1.04); }
+    }
+
+    body[data-theme='light'] .metric-card:hover {
+      border-color: rgba(14, 116, 144, 0.32);
     }
   </style>
 </head>
 <body class="text-slate-100 antialiased">
+  <div class="matrix-grid" aria-hidden="true"></div>
+  <div class="scanner-line" aria-hidden="true"></div>
+  <div class="retro-orbs" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+  </div>
   <a href="#mainContent" class="skip-link">Skip to dashboard content</a>
-  <main id="mainContent" class="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+  <main id="mainContent" class="relative z-10 mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
     <header class="mb-6 rounded-2xl border border-white/10 bg-panel/70 p-5 shadow-soft">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -430,13 +563,11 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
           <h1 id="dashboardTitle" class="mt-1 font-display text-2xl font-semibold text-white sm:text-3xl">Dashboard</h1>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <label class="switcher-chip focus-within:ring-2 focus-within:ring-cyan-300/45" title="Theme">
-            <svg class="switcher-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>
-            <span data-i18n="theme" class="switcher-label">Theme</span>
-            <select id="themeSwitch" aria-label="Theme" class="switcher-select">
-              <option value="dark" data-i18n="themeDark">Dark</option>
-              <option value="light" data-i18n="themeLight">Light</option>
-            </select>
+          <label class="switcher-chip focus-within:ring-2 focus-within:ring-cyan-300/45" title="Toggle theme">
+            <span data-i18n="theme" class="sr-only">Theme</span>
+            <button id="themeSwitch" type="button" class="theme-toggle" aria-label="Switch to light theme" aria-pressed="true">
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>
+            </button>
           </label>
           <label class="switcher-chip focus-within:ring-2 focus-within:ring-cyan-300/45" title="Language">
             <svg class="switcher-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 8 8 0 0 0-8-8zm4.9 7h-2.1a12.5 12.5 0 0 0-.6-3 6 6 0 0 1 2.7 3zM10 4.2c.6.9 1.1 2.8 1.3 4.8H8.7c.2-2 .7-3.9 1.3-4.8zM6.8 6a12.5 12.5 0 0 0-.6 3H4.1a6 6 0 0 1 2.7-3zM4.1 11h2.1c.1 1.1.3 2.1.6 3a6 6 0 0 1-2.7-3zm3.6 0h2.6c-.2 2-.7 3.9-1.3 4.8-.6-.9-1.1-2.8-1.3-4.8zm4.5 3c.3-.9.5-1.9.6-3h2.1a6 6 0 0 1-2.7 3z"/></svg>
@@ -461,6 +592,9 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
             <a href="settings.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.98 2.5a1 1 0 0 0-1.96 0l-.2 1.2a6.9 6.9 0 0 0-1.53.63l-1.03-.65a1 1 0 0 0-1.34.29l-.98 1.7a1 1 0 0 0 .23 1.29l.95.76a6.8 6.8 0 0 0 0 1.76l-.95.76a1 1 0 0 0-.23 1.29l.98 1.7a1 1 0 0 0 1.34.29l1.03-.65c.48.27.99.48 1.53.63l.2 1.2a1 1 0 0 0 1.96 0l.2-1.2c.54-.15 1.05-.36 1.53-.63l1.03.65a1 1 0 0 0 1.34-.29l.98-1.7a1 1 0 0 0-.23-1.29l-.95-.76a6.8 6.8 0 0 0 0-1.76l.95-.76a1 1 0 0 0 .23-1.29l-.98-1.7a1 1 0 0 0-1.34-.29l-1.03.65a6.9 6.9 0 0 0-1.53-.63zM10 7a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg><span data-i18n="settings">Settings</span></a>
           <?php endif; ?>
           <a href="inventory_adjustments.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 4h14v3H3zm0 5h14v3H3zm0 5h14v2H3z"/></svg><span data-i18n="inventory">Inventory</span></a>
+          <?php if ($enableMultiStore): ?>
+            <a href="multi_store.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2 2 6v2h16V6l-8-4zm-7 8h2v6H3v-6zm4 0h2v6H7v-6zm4 0h2v6h-2v-6zm4 0h2v6h-2v-6z"/></svg><span>Stores</span></a>
+          <?php endif; ?>
           <a href="receipt_history.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5 2h10a1 1 0 0 1 1 1v14l-2-1-2 1-2-1-2 1-2-1-2 1V3a1 1 0 0 1 1-1zm2 4v2h6V6zm0 4v2h6v-2z"/></svg><span data-i18n="receipts">Receipts</span></a>
           <a href="index.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 4 3 10l6 6 1.4-1.4L7.8 12H17v-2H7.8l2.6-2.6z"/></svg><span data-i18n="backToCheckout">Back to Checkout</span></a>
         </div>
@@ -791,6 +925,26 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       return languagePack[key] || translations.en[key] || key;
     }
 
+    function themeIconMarkup(theme) {
+      if (theme === 'light') {
+        return '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 4a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm5-2a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2h-1a1 1 0 0 1-1-1zM3 10a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm9.66-3.66a1 1 0 0 1 0-1.41l.71-.71a1 1 0 1 1 1.41 1.41l-.7.71a1 1 0 0 1-1.42 0zm-6.32 6.32a1 1 0 0 1 0-1.41l.71-.71a1 1 0 0 1 1.41 1.41l-.7.71a1 1 0 0 1-1.42 0zm7.03 0-.71-.71a1 1 0 1 1 1.41-1.41l.71.7a1 1 0 1 1-1.41 1.42zm-6.32-6.32-.71-.71A1 1 0 1 0 4.93 4.93l.7.71a1 1 0 1 0 1.42-1.41z"/></svg>';
+      }
+
+      return '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>';
+    }
+
+    function syncThemeToggle(theme) {
+      if (!(themeSwitch instanceof HTMLElement)) {
+        return;
+      }
+
+      const nextTheme = theme === 'light' ? 'dark' : 'light';
+      themeSwitch.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+      themeSwitch.setAttribute('title', `Switch to ${nextTheme} theme`);
+      themeSwitch.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+      themeSwitch.innerHTML = themeIconMarkup(theme);
+    }
+
     function applyLanguage(languageCode) {
       const allowedLanguages = ['en', 'fr', 'tw', 'ee', 'gaa', 'fat', 'dag', 'gur', 'kus'];
       const normalizedCode = normalizeLanguageCode(languageCode);
@@ -828,9 +982,7 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       }
 
       document.body.setAttribute('data-theme', theme);
-      if (themeSwitch) {
-        themeSwitch.value = theme;
-      }
+      syncThemeToggle(theme);
 
       try {
         localStorage.setItem(THEME_PREF_KEY, theme);
@@ -863,13 +1015,26 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
     }
 
     if (themeSwitch) {
-      themeSwitch.addEventListener('change', function () {
-        applyTheme(themeSwitch.value);
+      themeSwitch.addEventListener('click', function () {
+        const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(currentTheme === 'light' ? 'dark' : 'light');
       });
     }
 
+    window.addEventListener('storage', function (event) {
+      if (event.key !== THEME_PREF_KEY || event.newValue === null) {
+        return;
+      }
+
+      applyTheme(event.newValue);
+    });
+
     loadThemePreference();
     loadLanguagePreference();
+
+    setTimeout(function () {
+      document.body.classList.add('ambient-paused');
+    }, 16000);
 
     const labels = <?= $trendLabelsJson ?: '[]' ?>;
     const values = <?= $trendSalesJson ?: '[]' ?>;

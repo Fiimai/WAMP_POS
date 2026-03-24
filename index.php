@@ -246,7 +246,7 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     body[data-theme='light'] .bg-slate-950\/35,
     body[data-theme='light'] .bg-slate-950\/45,
     body[data-theme='light'] .bg-slate-900\/65 {
-      background-color: rgba(255, 255, 255, 0.74) !important;
+      background-color: rgba(255, 255, 255, 0.82) !important;
     }
 
     body[data-theme='light'] .quicklink-badge {
@@ -283,7 +283,8 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       color: #0f172a;
     }
 
-    body[data-theme='light'] .switcher-select {
+    body[data-theme='light'] .switcher-select,
+    body[data-theme='light'] .theme-toggle {
       color: #0f172a;
     }
 
@@ -516,6 +517,35 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       outline: none;
     }
 
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.45);
+      color: inherit;
+      transition: transform 150ms ease, border-color 150ms ease, background-color 150ms ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-1px);
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.68);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
+    }
+
+    .theme-toggle svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
     .switcher-label {
       font-size: 0.68rem;
       font-weight: 700;
@@ -596,6 +626,11 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       #quickControlsBar .switcher-select {
         min-width: 3.2rem;
         font-size: 0.68rem;
+      }
+
+      #quickControlsBar .theme-toggle {
+        width: 1.8rem;
+        height: 1.8rem;
       }
 
       #quickControlsBar select {
@@ -685,11 +720,17 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       <?php endif; ?>
       <a href="receipt_history.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5 2h10a1 1 0 0 1 1 1v14l-2-1-2 1-2-1-2 1-2-1-2 1V3a1 1 0 0 1 1-1zm2 4v2h6V6zm0 4v2h6v-2z"/></svg><span data-i18n="receipts">Receipts</span></a>
       <a href="dashboard.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 3h6v6H3zm8 0h6v10h-6zM3 11h6v6H3zm8 4h6v2h-6z"/></svg><span data-i18n="qlDashboard">Dashboard</span></a>
-      <?php if ($enable_returns ?? false): ?>
+      <?php if (($enableMultiStore ?? false) && in_array((string) $currentUser['role'], ['admin', 'manager'], true)): ?>
+        <a href="multi_store.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2 2 6v2h16V6l-8-4zm-7 8h2v6H3v-6zm4 0h2v6H7v-6zm4 0h2v6h-2v-6zm4 0h2v6h-2v-6z"/></svg><span>Stores</span></a>
+      <?php endif; ?>
+      <?php if ($enableReturns ?? false): ?>
         <a href="returns.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 12l-6-6h4V2h4v4h4l-6 6z"/></svg><span data-i18n="returns">Returns</span></a>
       <?php endif; ?>
-      <?php if ($enable_time_clock ?? false): ?>
+      <?php if ($enableTimeClock ?? false): ?>
         <a href="time_clock.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-9h2v4H9V7z"/></svg><span data-i18n="timeClock">Time Clock</span></a>
+        <?php if (in_array((string) $currentUser['role'], ['admin', 'manager'], true)): ?>
+          <a href="time_clock_management.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span data-i18n="timeClockMgmt">Time Clock Mgmt</span></a>
+        <?php endif; ?>
       <?php endif; ?>
       </div>
     </nav>
@@ -704,13 +745,11 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
           <div id="quickControlsCluster" class="flex flex-wrap items-center gap-2">
             <div id="quickControlsBar" class="flex items-center gap-2 rounded-xl border border-white/15 bg-slate-900/45 px-2 py-1.5 focus-within:ring-2 focus-within:ring-cyan-300/45">
               <span data-i18n="quickControls" class="px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-300">Quick Controls</span>
-              <label class="switcher-chip" title="Theme">
-                <svg class="switcher-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>
-                <span data-i18n="theme" class="switcher-label">Theme</span>
-                <select id="themeSwitch" aria-label="Theme" class="switcher-select text-slate-100">
-                  <option value="dark" data-i18n="themeDark">Dark</option>
-                  <option value="light" data-i18n="themeLight">Light</option>
-                </select>
+              <label class="switcher-chip" title="Toggle theme">
+                <span data-i18n="theme" class="sr-only">Theme</span>
+                <button id="themeSwitch" type="button" class="theme-toggle" aria-label="Switch to light theme" aria-pressed="true">
+                  <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>
+                </button>
               </label>
               <label class="switcher-chip" title="Language">
                 <svg class="switcher-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 8 8 0 0 0-8-8zm4.9 7h-2.1a12.5 12.5 0 0 0-.6-3 6 6 0 0 1 2.7 3zM10 4.2c.6.9 1.1 2.8 1.3 4.8H8.7c.2-2 .7-3.9 1.3-4.8zM6.8 6a12.5 12.5 0 0 0-.6 3H4.1a6 6 0 0 1 2.7-3zM4.1 11h2.1c.1 1.1.3 2.1.6 3a6 6 0 0 1-2.7-3zm3.6 0h2.6c-.2 2-.7 3.9-1.3 4.8-.6-.9-1.1-2.8-1.3-4.8zm4.5 3c.3-.9.5-1.9.6-3h2.1a6 6 0 0 1-2.7 3z"/></svg>
@@ -743,6 +782,12 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
         </div>
 
         <div id="moreToolsPanel" class="hidden grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <?php if ($enableMultiStore && in_array((string) $currentUser['role'], ['admin', 'manager'], true)): ?>
+            <a href="multi_store.php" class="quicklink-tile rounded-xl border border-white/10 bg-slate-900/40 p-3">
+              <p class="text-sm font-semibold text-white">Store Management</p>
+              <p class="mt-1 text-xs text-slate-300">Switch active store and view rollout status</p>
+            </a>
+          <?php endif; ?>
           <?php if ($userRole === 'admin'): ?>
             <a href="manage_products.php" class="quicklink-tile rounded-xl border border-white/10 bg-slate-900/40 p-3">
               <p data-i18n="qlProducts" class="text-sm font-semibold text-white">Manage Products</p>
@@ -812,7 +857,6 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     const enableMultiStore = <?= json_encode($enableMultiStore) ?>;
     const enableTimeClock = <?= json_encode($enableTimeClock) ?>;
     const enableEmailNotifications = <?= json_encode($enableEmailNotifications) ?>;
-    const checkoutBtn = document.getElementById('checkoutBtn');
     const searchForm = document.getElementById('searchForm');
     const searchInput = document.getElementById('searchInput');
     const searchSpinner = document.getElementById('searchSpinner');
@@ -1220,6 +1264,26 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       return languagePack[key] || translations.en[key] || key;
     }
 
+    function themeIconMarkup(theme) {
+      if (theme === 'light') {
+        return '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 4a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm5-2a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2h-1a1 1 0 0 1-1-1zM3 10a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm9.66-3.66a1 1 0 0 1 0-1.41l.71-.71a1 1 0 1 1 1.41 1.41l-.7.71a1 1 0 0 1-1.42 0zm-6.32 6.32a1 1 0 0 1 0-1.41l.71-.71a1 1 0 0 1 1.41 1.41l-.7.71a1 1 0 0 1-1.42 0zm7.03 0-.71-.71a1 1 0 1 1 1.41-1.41l.71.7a1 1 0 1 1-1.41 1.42zm-6.32-6.32-.71-.71A1 1 0 1 0 4.93 4.93l.7.71a1 1 0 1 0 1.42-1.41z"/></svg>';
+      }
+
+      return '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>';
+    }
+
+    function syncThemeToggle(theme) {
+      if (!(themeSwitch instanceof HTMLElement)) {
+        return;
+      }
+
+      const nextTheme = theme === 'light' ? 'dark' : 'light';
+      themeSwitch.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+      themeSwitch.setAttribute('title', `Switch to ${nextTheme} theme`);
+      themeSwitch.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+      themeSwitch.innerHTML = themeIconMarkup(theme);
+    }
+
     function applyTheme(themeName) {
       let theme = themeName;
       if (themeName === 'ocean') {
@@ -1233,9 +1297,7 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       }
 
       document.body.setAttribute('data-theme', theme);
-      if (themeSwitch) {
-        themeSwitch.value = theme;
-      }
+      syncThemeToggle(theme);
 
       try {
         localStorage.setItem(THEME_PREF_KEY, theme);
@@ -2118,10 +2180,19 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     }
 
     if (themeSwitch) {
-      themeSwitch.addEventListener('change', () => {
-        applyTheme(themeSwitch.value);
+      themeSwitch.addEventListener('click', () => {
+        const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(currentTheme === 'light' ? 'dark' : 'light');
       });
     }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key !== THEME_PREF_KEY || event.newValue === null) {
+        return;
+      }
+
+      applyTheme(event.newValue);
+    });
 
     if (languageSwitch) {
       languageSwitch.addEventListener('change', () => {

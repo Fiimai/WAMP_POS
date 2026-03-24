@@ -7,45 +7,43 @@ require __DIR__ . '/app/bootstrap.php';
 use App\Core\Auth;
 use App\Models\ShopSettings;
 
-$currentUser = Auth::requirePageAuth(['admin', 'manager', 'cashier']);
+$currentUser = Auth::requirePageAuth(['admin', 'manager']);
 $shopSettings = ShopSettings::get();
 $shopName = (string) ($shopSettings['shop_name'] ?? 'My Shop');
 $enableReturns = (bool) ($shopSettings['enable_returns'] ?? false);
 $enableTimeClock = (bool) ($shopSettings['enable_time_clock'] ?? false);
 $enableMultiStore = (bool) ($shopSettings['enable_multi_store'] ?? false);
 
-if (!(bool) ($shopSettings['enable_returns'] ?? false)) {
+if (!(bool) ($shopSettings['enable_time_clock'] ?? false)) {
     header('Location: index.php');
     exit;
 }
 
-$error = null;
-$success = null;
-$receipt = null;
+// Get all time clock records for today
+$pdo = \App\Core\Database::connection();
+$stmt = $pdo->prepare('
+    SELECT tc.*, u.username, u.full_name
+    FROM time_clock tc
+    JOIN users u ON u.id = tc.user_id
+    WHERE DATE(tc.clock_in) = CURDATE()
+    ORDER BY tc.clock_in DESC
+');
+$stmt->execute();
+$todayRecords = $stmt->fetchAll();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $receiptNo = trim((string) ($_POST['receipt_no'] ?? ''));
-
-    if ($receiptNo === '') {
-        $error = 'Receipt number is required.';
-    } else {
-        // Search for sale
-        $pdo = \App\Core\Database::connection();
-        $stmt = $pdo->prepare('SELECT * FROM sales WHERE receipt_no = :receipt_no');
-        $stmt->execute([':receipt_no' => $receiptNo]);
-        $sale = $stmt->fetch();
-
-        if ($sale) {
-            $receipt = $sale;
-            // Get items
-            $stmt = $pdo->prepare('SELECT si.*, p.name FROM sale_items si JOIN products p ON p.id = si.product_id WHERE si.sale_id = :sale_id');
-            $stmt->execute([':sale_id' => $sale['id']]);
-            $receipt['items'] = $stmt->fetchAll();
-        } else {
-            $error = 'Receipt not found.';
-        }
-    }
-}
+// Get current clock status for all users
+$stmt = $pdo->prepare('
+    SELECT u.id, u.username, u.full_name,
+           MAX(tc.clock_in) as last_clock_in,
+           MAX(tc.clock_out) as last_clock_out
+    FROM users u
+    LEFT JOIN time_clock tc ON tc.user_id = u.id AND DATE(tc.clock_in) = CURDATE()
+    WHERE u.is_active = 1
+    GROUP BY u.id, u.username, u.full_name
+    ORDER BY u.username
+');
+$stmt->execute();
+$userStatuses = $stmt->fetchAll();
 
 ?>
 <!DOCTYPE html>
@@ -53,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Returns - <?= e($shopName) ?> POS</title>
+    <title>Time Clock Management - <?= e($shopName) ?> POS</title>
     <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
     <link rel="stylesheet" href="assets/css/ambient-layer.css" />
     <script>
@@ -131,13 +129,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         body[data-theme='light'] .bg-slate-900,
-        body[data-theme='light'] .bg-slate-900\/40 {
+        body[data-theme='light'] .bg-slate-900\/40,
+        body[data-theme='light'] .bg-slate-700\/50 {
             background-color: rgba(248, 250, 252, 0.92) !important;
         }
 
         body[data-theme='light'] .text-white,
         body[data-theme='light'] .text-slate-300,
-        body[data-theme='light'] .text-slate-400 {
+        body[data-theme='light'] .text-slate-400,
+        body[data-theme='light'] .text-cyan-400,
+        body[data-theme='light'] .text-yellow-400,
+        body[data-theme='light'] .text-green-400,
+        body[data-theme='light'] .text-red-400 {
             color: #1e293b !important;
         }
 
@@ -169,10 +172,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 10px 30px rgba(148, 163, 184, 0.35);
         }
 
-        body[data-theme='light'] .bg-slate-800 {
-            background-color: rgba(248, 250, 252, 0.95) !important;
-        }
-
         body[data-theme='light'] #themeToggle {
             color: #0f172a;
         }
@@ -193,17 +192,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <a href="index.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 3h6v6H3zm8 0h6v10h-6zM3 11h6v6H3zm8 4h6v2h-6z"/></svg><span>Checkout</span></a>
                     <a href="receipt_history.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5 2h10a1 1 0 0 1 1 1v14l-2-1-2 1-2-1-2 1-2-1-2 1V3a1 1 0 0 1 1-1zm2 4v2h6V6zm0 4v2h6v-2z"/></svg><span>Receipts</span></a>
                     <a href="dashboard.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 3h6v6H3zm8 0h6v10h-6zM3 11h6v6H3zm8 4h6v2h-6z"/></svg><span>Dashboard</span></a>
-                    <?php if ($enableMultiStore && in_array((string) $currentUser['role'], ['admin', 'manager'], true)): ?>
+                    <?php if ($enableMultiStore): ?>
                         <a href="multi_store.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2 2 6v2h16V6l-8-4zm-7 8h2v6H3v-6zm4 0h2v6H7v-6zm4 0h2v6h-2v-6zm4 0h2v6h-2v-6z"/></svg><span>Stores</span></a>
                     <?php endif; ?>
                     <?php if ($enableReturns): ?>
-                        <span class="utility-link utility-link-active icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 12l-6-6h4V2h4v4h4l-6 6z"/></svg><span>Returns</span></span>
+                        <a href="returns.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 12l-6-6h4V2h4v4h4l-6 6z"/></svg><span>Returns</span></a>
                     <?php endif; ?>
                     <?php if ($enableTimeClock): ?>
                         <a href="time_clock.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-9h2v4H9V7z"/></svg><span>Time Clock</span></a>
-                        <?php if (in_array((string) $currentUser['role'], ['admin', 'manager'], true)): ?>
-                            <a href="time_clock_management.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Time Clock Mgmt</span></a>
-                        <?php endif; ?>
+                        <span class="utility-link utility-link-active icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Time Clock Mgmt</span></span>
                     <?php endif; ?>
                     <button type="button" id="themeToggle" class="utility-link icon-link" aria-label="Toggle theme">
                         <span id="themeToggleIcon" class="inline-block w-4 text-center" aria-hidden="true">&#9790;</span>
@@ -213,44 +210,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </nav>
 
             <div class="mb-5">
-                <h1 class="font-display text-2xl font-semibold text-white">Returns</h1>
-                <p class="mt-1 text-sm text-slate-300">Find receipts quickly and review sold line items for return processing.</p>
+                <h1 class="font-display text-2xl font-semibold text-white">Time Clock Management</h1>
+                <p class="mt-1 text-sm text-slate-300">Monitor employee clock-ins, active shifts, and daily durations.</p>
             </div>
 
-            <div class="max-w-md mx-auto">
-                <form method="post" class="glass mb-8 rounded-2xl p-5">
-                    <label for="receipt_no" class="block text-sm font-medium mb-2">Receipt Number</label>
-                    <input type="text" id="receipt_no" name="receipt_no" required class="w-full rounded-lg border border-white/20 bg-slate-800 px-3 py-2.5">
-                    <button type="submit" class="mt-4 w-full rounded-xl bg-cyan-600 px-4 py-2.5 font-semibold text-white transition hover:bg-cyan-700">Search Receipt</button>
-                </form>
-
-                <?php if ($error): ?>
-                    <div class="bg-red-500/20 border border-red-500/30 px-4 py-3 rounded-lg mb-4">
-                        <?= e($error) ?>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Current Status -->
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="font-display text-xl font-semibold mb-4">Current Status (Today)</h2>
+                    <div class="space-y-3">
+                        <?php foreach ($userStatuses as $user): ?>
+                            <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                                <div>
+                                    <div class="font-medium"><?= e($user['full_name']) ?> (<?= e($user['username']) ?>)</div>
+                                    <?php if ($user['last_clock_in'] && !$user['last_clock_out']): ?>
+                                        <div class="text-green-400 text-sm">Clocked in at: <?= e($user['last_clock_in']) ?></div>
+                                    <?php elseif ($user['last_clock_out']): ?>
+                                        <div class="text-slate-400 text-sm">Last clocked out at: <?= e($user['last_clock_out']) ?></div>
+                                    <?php else: ?>
+                                        <div class="text-slate-400 text-sm">Not clocked in today</div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-right">
+                                    <?php if ($user['last_clock_in'] && !$user['last_clock_out']): ?>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                                            Active
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-500/20 text-slate-400">
+                                            Inactive
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php endif; ?>
+                </div>
 
-                <?php if ($receipt): ?>
-                    <div class="glass rounded-2xl p-6">
-                        <h2 class="text-lg font-semibold mb-4">Receipt: <?= e($receipt['receipt_no']) ?></h2>
-                        <p class="text-sm text-slate-300 mb-4">Sold at: <?= e($receipt['sold_at']) ?></p>
-                        <div class="space-y-2 mb-4">
-                            <?php foreach ($receipt['items'] as $item): ?>
-                                <div class="flex justify-between">
-                                    <span><?= e($item['name']) ?> x <?= e($item['qty']) ?></span>
-                                    <span>$<?= number_format($item['line_total'], 2) ?></span>
+                <!-- Today's Records -->
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="font-display text-xl font-semibold mb-4">Today's Time Records</h2>
+                    <?php if (empty($todayRecords)): ?>
+                        <p class="text-slate-400">No time records for today yet.</p>
+                    <?php else: ?>
+                        <div class="space-y-3">
+                            <?php foreach ($todayRecords as $record): ?>
+                                <div class="p-3 bg-slate-700/50 rounded-lg">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="font-medium"><?= e($record['full_name']) ?> (<?= e($record['username']) ?>)</div>
+                                        <div class="text-sm text-slate-400">
+                                            <?= e(date('M j, Y', strtotime($record['clock_in']))) ?>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span class="text-slate-400">Clock In:</span>
+                                            <span class="text-green-400"><?= e(date('g:i A', strtotime($record['clock_in']))) ?></span>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-400">Clock Out:</span>
+                                            <?php if ($record['clock_out']): ?>
+                                                <span class="text-red-400"><?= e(date('g:i A', strtotime($record['clock_out']))) ?></span>
+                                            <?php else: ?>
+                                                <span class="text-yellow-400">Active</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <?php if ($record['clock_in'] && $record['clock_out']): ?>
+                                        <div class="mt-2 text-sm">
+                                            <span class="text-slate-400">Duration:</span>
+                                            <span class="text-cyan-400">
+                                                <?php
+                                                $duration = strtotime($record['clock_out']) - strtotime($record['clock_in']);
+                                                $hours = floor($duration / 3600);
+                                                $minutes = floor(($duration % 3600) / 60);
+                                                echo "{$hours}h {$minutes}m";
+                                                ?>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </div>
-                        <div class="border-t border-white/10 pt-4">
-                            <div class="flex justify-between font-semibold">
-                                <span>Total</span>
-                                <span>$<?= number_format($receipt['total_amount'], 2) ?></span>
-                            </div>
-                        </div>
-                        <p class="text-sm text-slate-400 mt-4">Return functionality not yet implemented.</p>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </main>
     </div>

@@ -197,24 +197,33 @@ try {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= e($shopName) ?> Receipt History</title>
-  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
+  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>`r`n  <link rel="stylesheet" href="assets/css/ambient-layer.css" />
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
+      --bg-base: #070b14;
+      --bg-glow-1: rgba(6, 182, 212, 0.18);
+      --bg-glow-2: rgba(34, 211, 170, 0.14);
+      --bg-glow-3: rgba(251, 113, 133, 0.16);
+      --glass-top: rgba(255, 255, 255, 0.1);
+      --glass-bottom: rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.14);
       background:
-        radial-gradient(circle at 12% 15%, rgba(6, 182, 212, 0.18), transparent 30%),
-        radial-gradient(circle at 80% 8%, rgba(34, 211, 170, 0.14), transparent 26%),
-        radial-gradient(circle at 84% 88%, rgba(251, 113, 133, 0.16), transparent 26%),
-        #070b14;
+        radial-gradient(circle at 12% 15%, var(--bg-glow-1), transparent 30%),
+        radial-gradient(circle at 80% 8%, var(--bg-glow-2), transparent 26%),
+        radial-gradient(circle at 84% 88%, var(--bg-glow-3), transparent 26%),
+        var(--bg-base);
       min-height: 100vh;
     }
 
     body[data-theme='light'] {
-      background:
-        radial-gradient(circle at 12% 15%, rgba(59, 130, 246, 0.2), transparent 30%),
-        radial-gradient(circle at 80% 8%, rgba(0, 212, 170, 0.18), transparent 26%),
-        radial-gradient(circle at 84% 88%, rgba(255, 107, 53, 0.16), transparent 26%),
-        #dbeafe;
+      --bg-base: #dbeafe;
+      --bg-glow-1: rgba(59, 130, 246, 0.2);
+      --bg-glow-2: rgba(0, 212, 170, 0.18);
+      --bg-glow-3: rgba(255, 107, 53, 0.16);
+      --glass-top: rgba(255, 255, 255, 0.95);
+      --glass-bottom: rgba(255, 255, 255, 0.82);
+      --glass-border: rgba(15, 23, 42, 0.14);
       color: #1e40af;
     }
 
@@ -235,7 +244,7 @@ try {
     body[data-theme='light'] .bg-slate-900\/50,
     body[data-theme='light'] .bg-slate-900\/30,
     body[data-theme='light'] .bg-slate-900\/65 {
-      background-color: rgba(255, 255, 255, 0.74) !important;
+      background-color: rgba(255, 255, 255, 0.82) !important;
     }
 
     body[data-theme='light'] .border-white\/10,
@@ -261,7 +270,7 @@ try {
     }
 
     body[data-theme='light'] .bg-rose-500\/10 {
-      background-color: rgba(254, 226, 226, 0.75) !important;
+      background-color: rgba(254, 226, 226, 0.68) !important;
     }
 
     body[data-theme='light'] .text-emerald-100,
@@ -270,14 +279,14 @@ try {
     }
 
     body[data-theme='light'] .bg-emerald-500\/10 {
-      background-color: rgba(209, 250, 229, 0.75) !important;
+      background-color: rgba(209, 250, 229, 0.68) !important;
     }
 
     .glass {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+      background: linear-gradient(145deg, var(--glass-top), var(--glass-bottom));
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      border: 1px solid var(--glass-border);
     }
 
     .skip-link {
@@ -300,6 +309,12 @@ try {
       transform: translateY(0);
       outline: 2px solid rgba(125, 211, 252, 0.8);
       outline-offset: 1px;
+    }
+
+    body[data-theme='light'] .skip-link {
+      border-color: rgba(15, 23, 42, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      color: #0f172a;
     }
 
     .utility-link {
@@ -328,9 +343,9 @@ try {
     }
   </style>
 </head>
-<body class="text-slate-100 antialiased">
+<body class="ambient-strong text-slate-100 antialiased">
   <a href="#mainContent" class="skip-link">Skip to receipt history content</a>
-  <main id="mainContent" class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+  <div class="matrix-grid" aria-hidden="true"></div>`r`n  <div class="scanner-line" aria-hidden="true"></div>`r`n  <div class="retro-orbs" aria-hidden="true">`r`n    <span class="orb orb-a"></span>`r`n    <span class="orb orb-b"></span>`r`n  </div>`r`n  <main id="mainContent" class="relative z-10 mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <p class="font-display text-xs uppercase tracking-[0.28em] text-cyan-300"><?= e(strtoupper($shopName) . ' POS') ?></p>
@@ -342,6 +357,10 @@ try {
         <?php if ((string) $currentUser['role'] !== 'cashier'): ?>
           <a href="dashboard.php" class="utility-link">Dashboard</a>
         <?php endif; ?>
+        <button type="button" id="themeToggle" class="utility-link inline-flex items-center gap-1.5" aria-label="Toggle theme">
+          <span id="themeToggleIcon" class="inline-block w-4 text-center" aria-hidden="true">&#9790;</span>
+          <span id="themeToggleText">Dark</span>
+        </button>
       </div>
     </header>
 
@@ -467,6 +486,59 @@ try {
       </div>
     </section>
   </main>
+  <script src="assets/js/ambient-layer.js"></script>
+  <script>
+    window.NovaAmbient.init({ pauseAfterMs: 8500 });
+
+    (function () {
+      const THEME_PREF_KEY = 'novapos_theme';
+      const themeToggle = document.getElementById('themeToggle');
+      const themeToggleIcon = document.getElementById('themeToggleIcon');
+      const themeToggleText = document.getElementById('themeToggleText');
+
+      function syncThemeToggle(theme) {
+        if (!themeToggle || !themeToggleIcon || !themeToggleText) {
+          return;
+        }
+        const isLight = theme === 'light';
+        themeToggleIcon.innerHTML = isLight ? '&#9728;' : '&#9790;';
+        themeToggleText.textContent = isLight ? 'Light' : 'Dark';
+      }
+
+      function applyTheme(themeName, persist) {
+        const theme = themeName === 'light' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
+        syncThemeToggle(theme);
+        if (persist) {
+          try {
+            localStorage.setItem(THEME_PREF_KEY, theme);
+          } catch (error) {
+          }
+        }
+      }
+
+      let savedTheme = 'dark';
+      try {
+        savedTheme = localStorage.getItem(THEME_PREF_KEY) || 'dark';
+      } catch (error) {
+      }
+      applyTheme(savedTheme, false);
+
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+          const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+          applyTheme(currentTheme === 'light' ? 'dark' : 'light', true);
+        });
+      }
+
+      window.addEventListener('storage', function (event) {
+        if (event.key !== THEME_PREF_KEY || event.newValue === null) {
+          return;
+        }
+        applyTheme(event.newValue, false);
+      });
+    })();
+  </script>
 </body>
 </html>
 

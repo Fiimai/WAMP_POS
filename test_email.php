@@ -48,17 +48,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
+      --bg-base: #070b14;
+      --bg-glow-1: rgba(34, 211, 238, 0.2);
+      --bg-glow-2: rgba(251, 113, 133, 0.14);
       background:
-        radial-gradient(circle at 15% 10%, rgba(34, 211, 238, 0.2), transparent 28%),
-        radial-gradient(circle at 80% 90%, rgba(251, 113, 133, 0.14), transparent 25%),
-        #070b14;
+        radial-gradient(circle at 15% 10%, var(--bg-glow-1), transparent 28%),
+        radial-gradient(circle at 80% 90%, var(--bg-glow-2), transparent 25%),
+        var(--bg-base);
+      min-height: 100vh;
     }
 
     body[data-theme='light'] {
-      background:
-        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.2), transparent 28%),
-        radial-gradient(circle at 80% 90%, rgba(255, 107, 53, 0.18), transparent 25%),
-        #dbeafe;
+      --bg-base: #dbeafe;
+      --bg-glow-1: rgba(59, 130, 246, 0.2);
+      --bg-glow-2: rgba(255, 107, 53, 0.18);
       color: #1e40af;
     }
 
@@ -79,7 +82,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     body[data-theme='light'] .bg-slate-900\/30,
     body[data-theme='light'] .bg-slate-900\/45,
     body[data-theme='light'] .bg-slate-900\/65 {
-      background-color: rgba(255, 255, 255, 0.74) !important;
+      background-color: rgba(255, 255, 255, 0.82) !important;
     }
   </style>
 </head>

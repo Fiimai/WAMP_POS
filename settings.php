@@ -432,17 +432,77 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
   <style>
     body {
       font-family: 'Montserrat', 'Lato', 'Segoe UI', Tahoma, Arial, sans-serif;
+      --bg-base: #070b14;
+      --bg-glow-1: rgba(34, 211, 238, 0.2);
+      --bg-glow-2: rgba(251, 113, 133, 0.14);
       background:
-        radial-gradient(circle at 15% 10%, rgba(34, 211, 238, 0.2), transparent 28%),
-        radial-gradient(circle at 80% 90%, rgba(251, 113, 133, 0.14), transparent 25%),
-        #070b14;
+        radial-gradient(circle at 15% 10%, var(--bg-glow-1), transparent 28%),
+        radial-gradient(circle at 80% 90%, var(--bg-glow-2), transparent 25%),
+        var(--bg-base);
+      min-height: 100vh;
+    }
+
+    .matrix-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image: radial-gradient(circle, rgba(125, 211, 252, 0.22) 1px, transparent 1.2px);
+      background-size: 24px 24px;
+      opacity: 0.2;
+      animation: matrixDrift 18s linear infinite;
+    }
+
+    .scanner-line {
+      position: fixed;
+      left: -20%;
+      width: 140%;
+      height: 1px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.28;
+      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.82), transparent);
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
+      animation: scannerSweep 12s linear infinite;
+    }
+
+    .retro-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(1px);
+      opacity: 0.2;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.72), rgba(56, 189, 248, 0.2) 45%, transparent 72%);
+      animation: orbFloat 20s ease-in-out infinite;
+    }
+
+    .orb.orb-a {
+      width: 180px;
+      height: 180px;
+      left: -52px;
+      top: 16%;
+    }
+
+    .orb.orb-b {
+      width: 140px;
+      height: 140px;
+      right: -32px;
+      top: 30%;
+      animation-duration: 24s;
+      animation-delay: -5s;
     }
 
     body[data-theme='light'] {
-      background:
-        radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.2), transparent 28%),
-        radial-gradient(circle at 80% 90%, rgba(255, 107, 53, 0.18), transparent 25%),
-        #dbeafe;
+      --bg-base: #dbeafe;
+      --bg-glow-1: rgba(59, 130, 246, 0.2);
+      --bg-glow-2: rgba(255, 107, 53, 0.18);
       color: #1e40af;
     }
 
@@ -454,7 +514,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     body[data-theme='light'] .text-slate-300,
     body[data-theme='light'] .text-slate-400 {
-      color: #1e293b !important;
+      color: #334155 !important;
     }
 
     body[data-theme='light'] .bg-slate-900\/60,
@@ -462,7 +522,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     body[data-theme='light'] .bg-slate-950\/60,
     body[data-theme='light'] .bg-slate-950\/40,
     body[data-theme='light'] .bg-white\/5 {
-      background-color: rgba(255, 255, 255, 0.78) !important;
+      background-color: rgba(255, 255, 255, 0.82) !important;
     }
 
     body[data-theme='light'] .border-white\/10,
@@ -491,7 +551,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     body[data-theme='light'] .bg-cyan-500\/10,
     body[data-theme='light'] .bg-amber-500\/12,
     body[data-theme='light'] .bg-rose-500\/10 {
-      background-color: rgba(248, 250, 252, 0.9) !important;
+      background-color: rgba(248, 250, 252, 0.86) !important;
     }
 
     body[data-theme='light'] .text-emerald-100,
@@ -509,10 +569,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       background-color: rgba(148, 163, 184, 0.18) !important;
     }
 
+    body[data-theme='light'] .bg-slate-950\/60,
+    body[data-theme='light'] .bg-slate-950\/40 {
+      background-color: rgba(255, 255, 255, 0.88) !important;
+    }
+
     body[data-theme='light'] select,
     body[data-theme='light'] input,
     body[data-theme='light'] button {
       color: #0f172a;
+    }
+
+    body[data-theme='light'] input,
+    body[data-theme='light'] select {
+      border-color: rgba(15, 23, 42, 0.2) !important;
+      background-color: rgba(255, 255, 255, 0.86) !important;
     }
 
     .icon-link {
@@ -557,6 +628,35 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       color: #f8fafc;
     }
 
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.45);
+      color: #f8fafc;
+      transition: transform 150ms ease, border-color 150ms ease, background-color 150ms ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-1px);
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.68);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
+    }
+
+    .theme-toggle svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
     .switcher-label {
       font-size: 0.68rem;
       font-weight: 700;
@@ -587,6 +687,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       color: #0f172a;
     }
 
+    body[data-theme='light'] .theme-toggle {
+      color: #0f172a;
+      border-color: rgba(15, 23, 42, 0.22);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .ambient-paused .matrix-grid,
+    .ambient-paused .scanner-line,
+    .ambient-paused .orb {
+      animation: none !important;
+    }
+
     @media (max-width: 768px) {
       .switcher-label {
         display: none;
@@ -601,24 +713,48 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         min-width: 3.2rem;
         font-size: 0.68rem;
       }
+
+      .theme-toggle {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+    }
+
+    @keyframes matrixDrift {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-24px, -24px, 0); }
+    }
+
+    @keyframes scannerSweep {
+      0% { top: -8%; }
+      100% { top: 108%; }
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(0, -16px, 0) scale(1.04); }
     }
   </style>
 </head>
 <body class="min-h-screen text-slate-100 antialiased">
-  <main class="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+  <div class="matrix-grid" aria-hidden="true"></div>
+  <div class="scanner-line" aria-hidden="true"></div>
+  <div class="retro-orbs" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+  </div>
+  <main class="relative z-10 mx-auto max-w-4xl px-4 py-6 sm:px-6">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 data-i18n="shopSettings" class="text-2xl font-semibold">Shop Settings</h1>
         <p id="signedInText" data-name="<?= e((string) $currentUser['full_name']) ?>" data-role="admin" class="text-sm text-slate-300">Signed in as <?= e((string) $currentUser['full_name']) ?> (admin)</p>
       </div>
       <div class="flex gap-2">
-        <label class="switcher-chip" title="Theme">
-          <svg class="switcher-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>
-          <span data-i18n="theme" class="switcher-label">Theme</span>
-          <select id="themeSwitch" aria-label="Theme" class="switcher-select">
-            <option value="dark" data-i18n="themeDark">Dark</option>
-            <option value="light" data-i18n="themeLight">Light</option>
-          </select>
+        <label class="switcher-chip" title="Toggle theme">
+          <span data-i18n="theme" class="sr-only">Theme</span>
+          <button id="themeSwitch" type="button" class="theme-toggle" aria-label="Switch to light theme" aria-pressed="true">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>
+          </button>
         </label>
         <label class="switcher-chip" title="Language">
           <svg class="switcher-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 8 8 0 0 0-8-8zm4.9 7h-2.1a12.5 12.5 0 0 0-.6-3 6 6 0 0 1 2.7 3zM10 4.2c.6.9 1.1 2.8 1.3 4.8H8.7c.2-2 .7-3.9 1.3-4.8zM6.8 6a12.5 12.5 0 0 0-.6 3H4.1a6 6 0 0 1 2.7-3zM4.1 11h2.1c.1 1.1.3 2.1.6 3a6 6 0 0 1-2.7-3zm3.6 0h2.6c-.2 2-.7 3.9-1.3 4.8-.6-.9-1.1-2.8-1.3-4.8zm4.5 3c.3-.9.5-1.9.6-3h2.1a6 6 0 0 1-2.7 3z"/></svg>
@@ -1194,6 +1330,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         return languagePack[key] || translations.en[key] || key;
       }
 
+      function themeIconMarkup(theme) {
+        if (theme === 'light') {
+          return '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 4a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1zm0 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm5-2a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2h-1a1 1 0 0 1-1-1zM3 10a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm9.66-3.66a1 1 0 0 1 0-1.41l.71-.71a1 1 0 1 1 1.41 1.41l-.7.71a1 1 0 0 1-1.42 0zm-6.32 6.32a1 1 0 0 1 0-1.41l.71-.71a1 1 0 0 1 1.41 1.41l-.7.71a1 1 0 0 1-1.42 0zm7.03 0-.71-.71a1 1 0 1 1 1.41-1.41l.71.7a1 1 0 1 1-1.41 1.42zm-6.32-6.32-.71-.71A1 1 0 1 0 4.93 4.93l.7.71a1 1 0 1 0 1.42-1.41z"/></svg>';
+        }
+
+        return '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 1 0 8 8 7 7 0 0 1-8-8z"/></svg>';
+      }
+
+      function syncThemeToggle(theme) {
+        if (!(themeSwitch instanceof HTMLElement)) {
+          return;
+        }
+
+        const nextTheme = theme === 'light' ? 'dark' : 'light';
+        themeSwitch.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+        themeSwitch.setAttribute('title', `Switch to ${nextTheme} theme`);
+        themeSwitch.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+        themeSwitch.innerHTML = themeIconMarkup(theme);
+      }
+
       function applyLanguage(languageCode) {
         const allowedLanguages = ['en', 'fr', 'tw', 'ee', 'gaa', 'fat', 'dag', 'gur', 'kus'];
         const normalizedCode = normalizeLanguageCode(languageCode);
@@ -1231,9 +1387,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         }
 
         document.body.setAttribute('data-theme', theme);
-        if (themeSwitch) {
-          themeSwitch.value = theme;
-        }
+        syncThemeToggle(theme);
 
         try {
           localStorage.setItem(THEME_PREF_KEY, theme);
@@ -1276,15 +1430,28 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       }
 
       if (themeSwitch) {
-        themeSwitch.addEventListener('change', function () {
-          applyTheme(themeSwitch.value);
+        themeSwitch.addEventListener('click', function () {
+          const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+          applyTheme(currentTheme === 'light' ? 'dark' : 'light');
         });
       }
+
+      window.addEventListener('storage', function (event) {
+        if (event.key !== THEME_PREF_KEY || event.newValue === null) {
+          return;
+        }
+
+        applyTheme(event.newValue);
+      });
 
       currencyCode.addEventListener('change', syncSymbol);
       syncSymbol();
       loadThemePreference();
       loadLanguagePreference();
+
+      setTimeout(function () {
+        document.body.classList.add('ambient-paused');
+      }, 16000);
     })();
   </script>
   <?php require __DIR__ . '/app/Views/partials/support-card.php'; ?>
