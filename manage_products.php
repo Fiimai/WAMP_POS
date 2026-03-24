@@ -19,6 +19,18 @@ $errors = [];
 $success = null;
 $importSummary = null;
 
+$downloadTemplate = ((string) ($_GET['template'] ?? '')) === 'products_csv';
+if ($downloadTemplate) {
+  header('Content-Type: text/csv; charset=utf-8');
+  header('Content-Disposition: attachment; filename="products-import-template.csv"');
+  $out = fopen('php://output', 'wb');
+  if (is_resource($out)) {
+    fputcsv($out, ['name', 'sku', 'category', 'unit_price', 'stock_qty', 'reorder_level', 'barcode', 'description', 'cost_price', 'is_active']);
+    fclose($out);
+  }
+  exit;
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $ip = Auth::clientIp();
     $limit = RateLimiter::hit('admin:manage_products:' . (int) $currentUser['id'] . ':' . $ip, 100, 60);
@@ -379,6 +391,7 @@ $products = $service->listProducts($query === '' ? null : $query);
           <input type="file" name="products_csv" accept=".csv,text/csv" required class="mt-1 block w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm" />
         </label>
         <button class="min-h-[42px] rounded-xl border border-cyan-300/35 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/15">Import CSV</button>
+        <a href="manage_products.php?template=products_csv" class="min-h-[42px] rounded-xl border border-emerald-300/35 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-500/15">Download CSV Template</a>
       </div>
       <p class="text-xs text-slate-400">CSV headers: name, sku, category, unit_price, stock_qty, reorder_level, barcode, description, cost_price, is_active</p>
     </form>

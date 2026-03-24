@@ -180,6 +180,18 @@ function checkoutAuditGuardStatus(): array
 
 $checkoutAuditGuard = checkoutAuditGuardStatus();
 
+$downloadTemplate = (string) ($_GET['template'] ?? '');
+if ($downloadTemplate === 'categories_csv') {
+  header('Content-Type: text/csv; charset=utf-8');
+  header('Content-Disposition: attachment; filename="categories-import-template.csv"');
+  $out = fopen('php://output', 'wb');
+  if (is_resource($out)) {
+    fputcsv($out, ['name', 'slug', 'is_active']);
+    fclose($out);
+  }
+  exit;
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $csrf = (string) ($_POST['csrf_token'] ?? '');
     $sessionCsrf = (string) ($_SESSION['csrf_token'] ?? '');
@@ -994,6 +1006,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             <input type="file" name="categories_csv" accept=".csv,text/csv" required class="mt-1 block w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm" />
           </label>
           <button data-i18n="importCsv" class="rounded-xl border border-cyan-300/35 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/15">Import CSV</button>
+          <a href="settings.php?template=categories_csv" data-i18n="downloadCsvTemplate" class="rounded-xl border border-emerald-300/35 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-500/15">Download CSV Template</a>
         </div>
         <p data-i18n="csvHelp" class="text-xs text-slate-400">CSV headers: name, slug, is_active (required: name). Existing slug rows are updated; new rows are created.</p>
       </form>
@@ -1104,6 +1117,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           addCategory: 'Add Category',
           bulkImportCategories: 'Bulk Import Categories (CSV)',
           importCsv: 'Import CSV',
+          downloadCsvTemplate: 'Download CSV Template',
           csvHelp: 'CSV headers: name, slug, is_active (required: name). Existing slug rows are updated; new rows are created.',
           name: 'Name',
           slug: 'Slug',
@@ -1161,6 +1175,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           addCategory: 'Ajouter categorie',
           bulkImportCategories: 'Import categories (CSV)',
           importCsv: 'Importer CSV',
+          downloadCsvTemplate: 'Telecharger modele CSV',
           csvHelp: 'Entetes CSV: name, slug, is_active (name requis). Les slugs existants sont mis a jour; les nouveaux sont crees.',
           name: 'Nom',
           slug: 'Slug',

@@ -20,6 +20,18 @@ $errors = [];
 $success = null;
 $importSummary = null;
 
+$downloadTemplate = ((string) ($_GET['template'] ?? '')) === 'users_csv';
+if ($downloadTemplate) {
+  header('Content-Type: text/csv; charset=utf-8');
+  header('Content-Disposition: attachment; filename="users-import-template.csv"');
+  $out = fopen('php://output', 'wb');
+  if (is_resource($out)) {
+    fputcsv($out, ['full_name', 'username', 'email', 'password', 'role', 'is_active']);
+    fclose($out);
+  }
+  exit;
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $limit = RateLimiter::hit('admin:manage_users:' . (int) $currentUser['id'] . ':' . Auth::clientIp(), 80, 60);
     if (!$limit['allowed']) {
@@ -347,6 +359,7 @@ $users = $service->listUsers($query === '' ? null : $query);
           <input type="file" name="users_csv" accept=".csv,text/csv" required class="mt-1 block w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2 text-sm" />
         </label>
         <button class="min-h-[42px] rounded-xl border border-cyan-300/35 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/15">Import CSV</button>
+        <a href="manage_users.php?template=users_csv" class="min-h-[42px] rounded-xl border border-emerald-300/35 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-500/15">Download CSV Template</a>
       </div>
       <p class="text-xs text-slate-400">CSV headers: full_name, username, email, password, role, is_active</p>
     </form>
