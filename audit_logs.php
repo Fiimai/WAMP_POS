@@ -131,6 +131,153 @@ $nextQuery = $baseQuery;
 $nextQuery['page'] = (string) min($totalPages, $page + 1);
 $csvQuery = $baseQuery;
 $csvQuery['export'] = 'csv';
+
+/**
+ * @param mixed $value
+ */
+function formatAuditDetailValue(string $key, $value, string $currencySymbol, ?string $action = null): string
+{
+  $normalizedAction = strtolower(trim((string) $action));
+
+  if (is_bool($value)) {
+    return $value ? 'yes' : 'no';
+  }
+
+  if (is_array($value) || is_object($value)) {
+    $encoded = json_encode($value, JSON_UNESCAPED_SLASHES);
+    return $encoded === false ? '[unserializable]' : $encoded;
+  }
+
+  if ($value === null) {
+    return '-';
+  }
+
+  $normalizedKey = strtolower($key);
+
+  if ($normalizedKey === 'payment_method' && is_string($value)) {
+    return ucwords(str_replace(['_', '-'], ' ', $value));
+  }
+
+  if ($normalizedKey === 'identity' && trim((string) $value) === '') {
+    return '-';
+  }
+
+  if ($normalizedAction === 'login.rate_limited' && $normalizedKey === 'retry_after' && is_numeric($value)) {
+    $seconds = max(0, (int) round((float) $value));
+    if ($seconds === 1) {
+      return '1 second';
+    }
+    return number_format((float) $seconds, 0, '.', ',') . ' seconds';
+  }
+
+  if ($normalizedAction === 'inventory.adjusted' && $normalizedKey === 'qty_change' && is_numeric($value)) {
+    $delta = (int) $value;
+    if ($delta > 0) {
+      return '+' . (string) $delta;
+    }
+    return (string) $delta;
+  }
+
+  $isCurrencyField = preg_match('/(total|amount|price|cost|subtotal|tax|discount|balance|change|cash)/', $normalizedKey) === 1;
+  if ($isCurrencyField && is_numeric($value)) {
+    return $currencySymbol . number_format((float) $value, 2);
+  }
+
+  if (is_numeric($value)) {
+    $numeric = (float) $value;
+    if (fmod($numeric, 1.0) === 0.0) {
+      return number_format($numeric, 0, '.', ',');
+    }
+  }
+
+  $isDateField = preg_match('/(date|time|_at|clock|created|updated|sold)/', $normalizedKey) === 1;
+  if ($isDateField && is_string($value)) {
+    $timestamp = strtotime($value);
+    if ($timestamp !== false) {
+      return date('M j, Y g:i A', $timestamp);
+    }
+  }
+
+  return (string) $value;
+}
+
+function formatAuditDetailLabel(string $key, ?string $action = null): string
+{
+  static $labelMap = [
+    'receipt_no' => 'Receipt #',
+    'payment_method' => 'Payment Method',
+    'identity' => 'Login Identity',
+    'retry_after' => 'Retry After',
+    'cashier_user_id' => 'Cashier User ID',
+    'cashier_name' => 'Cashier',
+    'sale_id' => 'Sale ID',
+    'user_id' => 'User ID',
+    'username' => 'Username',
+    'full_name' => 'Full Name',
+    'email' => 'Email',
+    'role' => 'Role',
+    'is_active' => 'Active',
+    'created' => 'Created',
+    'skipped' => 'Skipped',
+    'qty_change' => 'Quantity Change',
+    'stock_before' => 'Stock Before',
+    'stock_after' => 'Stock After',
+    'product_id' => 'Product ID',
+    'product_name' => 'Product Name',
+    'sku' => 'SKU',
+    'entity_type' => 'Entity Type',
+    'entity_id' => 'Entity ID',
+    'ip_address' => 'IP Address',
+    'user_agent' => 'User Agent',
+    'clock_in' => 'Clock In',
+    'clock_out' => 'Clock Out',
+    'created_at' => 'Created At',
+    'updated_at' => 'Updated At',
+    'total' => 'Total',
+    'subtotal' => 'Subtotal',
+    'tax' => 'Tax',
+    'tax_amount' => 'Tax Amount',
+    'discount' => 'Discount',
+    'discount_amount' => 'Discount Amount',
+    'amount' => 'Amount',
+  ];
+
+  static $actionLabelMap = [
+    'checkout.completed' => [
+      'total' => 'Sale Total',
+      'payment_method' => 'Tender Type',
+    ],
+    'inventory.adjusted' => [
+      'qty_change' => 'Adjusted Quantity',
+      'stock_before' => 'Previous Stock',
+      'stock_after' => 'New Stock',
+    ],
+    'login.failed' => [
+      'identity' => 'Attempted Username',
+    ],
+    'login.rate_limited' => [
+      'identity' => 'Attempted Username',
+      'retry_after' => 'Retry In',
+    ],
+    'user.bulk_imported' => [
+      'created' => 'Users Created',
+      'skipped' => 'Rows Skipped',
+    ],
+  ];
+
+  $normalized = strtolower($key);
+  $normalizedAction = strtolower(trim((string) $action));
+
+  if ($normalizedAction !== '' && isset($actionLabelMap[$normalizedAction][$normalized])) {
+    return $actionLabelMap[$normalizedAction][$normalized];
+  }
+
+  if (isset($labelMap[$normalized])) {
+    return $labelMap[$normalized];
+  }
+
+  return ucfirst(str_replace('_', ' ', $key));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -270,7 +417,13 @@ $csvQuery['export'] = 'csv';
 </head>
 <body class="ambient-medium min-h-screen text-slate-100 antialiased">
   <a href="#mainContent" class="skip-link">Skip to audit logs content</a>
-  <div class="matrix-grid" aria-hidden="true"></div>`r`n  <div class="scanner-line" aria-hidden="true"></div>`r`n  <div class="retro-orbs" aria-hidden="true">`r`n    <span class="orb orb-a"></span>`r`n    <span class="orb orb-b"></span>`r`n  </div>`r`n  <main id="mainContent" class="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6">
+  <div class="matrix-grid" aria-hidden="true"></div>
+  <div class="scanner-line" aria-hidden="true"></div>
+  <div class="retro-orbs" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+  </div>
+  <main id="mainContent" class="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-semibold">Audit Logs</h1>
@@ -341,14 +494,50 @@ $csvQuery['export'] = 'csv';
                 if ($entityLabel !== '' && ($row['entity_id'] ?? null) !== null) {
                     $entityLabel .= '#' . (string) $row['entity_id'];
                 }
+
+                $ipAddress = trim((string) ($row['ip_address'] ?? ''));
+
+                $detailsRaw = trim((string) ($row['details_json'] ?? ''));
+                $detailsList = [];
+                if ($detailsRaw !== '') {
+                    $decoded = json_decode($detailsRaw, true);
+                    if (is_array($decoded)) {
+                        foreach ($decoded as $key => $value) {
+                        $valueText = formatAuditDetailValue(
+                          (string) $key,
+                          $value,
+                          (string) ($shop['currency_symbol'] ?? '$'),
+                          (string) ($row['action'] ?? '')
+                        );
+
+                      $label = formatAuditDetailLabel((string) $key, (string) ($row['action'] ?? ''));
+                            $detailsList[] = ['label' => $label, 'value' => $valueText];
+                        }
+                    } else {
+                        $detailsList[] = ['label' => 'Details', 'value' => $detailsRaw];
+                    }
+                }
               ?>
               <tr class="border-t border-white/10 align-top">
                 <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['created_at']) ?></td>
                 <td class="px-3 py-2.5 text-slate-200"><?= e((string) ($row['actor_name'] ?? 'System')) ?></td>
                 <td class="px-3 py-2.5 text-cyan-200"><?= e((string) $row['action']) ?></td>
                 <td class="px-3 py-2.5 text-slate-300"><?= e($entityLabel) ?></td>
-                <td class="px-3 py-2.5 text-slate-300"><?= e((string) ($row['ip_address'] ?? '')) ?></td>
-                <td class="px-3 py-2 text-xs text-slate-300"><pre class="whitespace-pre-wrap break-all"><?= e((string) ($row['details_json'] ?? '')) ?></pre></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= $ipAddress !== '' ? e($ipAddress) : '-' ?></td>
+                <td class="px-3 py-2 text-xs text-slate-300">
+                  <?php if ($detailsList === []): ?>
+                    <span class="text-slate-500">-</span>
+                  <?php else: ?>
+                    <div class="space-y-1">
+                      <?php foreach ($detailsList as $detail): ?>
+                        <div class="flex flex-wrap items-start gap-1">
+                          <span class="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-200"><?= e((string) $detail['label']) ?></span>
+                          <span class="break-all text-slate-300"><?= e((string) $detail['value']) ?></span>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
+                </td>
               </tr>
             <?php endforeach; ?>
           <?php endif; ?>
