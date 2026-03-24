@@ -43,3 +43,4 @@ final class User
         return $user ?: null;
     }
 }
+

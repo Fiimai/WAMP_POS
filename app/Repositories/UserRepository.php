@@ -159,3 +159,4 @@ final class UserRepository
         return $statement->execute();
     }
 }
+

@@ -22,3 +22,4 @@ if (!is_array($rootConfig) || !isset($rootConfig['db']) || !is_array($rootConfig
 }
 
 return $rootConfig['db'];
+

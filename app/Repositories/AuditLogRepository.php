@@ -60,3 +60,4 @@ final class AuditLogRepository
         $statement->execute();
     }
 }
+

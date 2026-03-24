@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+// Check for maintenance mode (skip for CLI)
+$maintenanceFile = dirname(__DIR__) . '/maintenance.flag';
+if (PHP_SAPI !== 'cli' && file_exists($maintenanceFile)) {
+    require dirname(__DIR__) . '/maintenance.php';
+}
+
 spl_autoload_register(static function (string $class): void {
     $prefix = 'App\\';
     $baseDir = __DIR__ . '/';
@@ -43,3 +49,4 @@ function e(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+

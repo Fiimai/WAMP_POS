@@ -29,6 +29,9 @@ function renderReceiptHtml(array $sale, array $items, array $shop): string
 {
     $currency = (string) ($shop['currency_symbol'] ?? '$');
     $shopName = (string) ($shop['shop_name'] ?? 'My Shop');
+  $shopBrand = strtoupper($shopName) . ' POS';
+  $logoUrl = trim((string) ($shop['shop_logo_url'] ?? ''));
+  $tagline = trim((string) ($shop['business_tagline'] ?? ''));
     $address = trim((string) ($shop['shop_address'] ?? ''));
     $phone = trim((string) ($shop['shop_phone'] ?? ''));
     $taxId = trim((string) ($shop['shop_tax_id'] ?? ''));
@@ -39,7 +42,9 @@ function renderReceiptHtml(array $sale, array $items, array $shop): string
     ?>
     <div class="receipt">
       <div class="center">
+        <?php if ($logoUrl !== ''): ?><p><img src="<?= e($logoUrl) ?>" alt="Shop logo" style="max-height:42px; max-width:100%;" /></p><?php endif; ?>
         <h1><?= e($shopName) ?></h1>
+        <?php if ($tagline !== ''): ?><p><?= e($tagline) ?></p><?php endif; ?>
         <?php if ($address !== ''): ?><p><?= e($address) ?></p><?php endif; ?>
         <?php if ($phone !== ''): ?><p>Tel: <?= e($phone) ?></p><?php endif; ?>
         <?php if ($taxId !== ''): ?><p>Tax ID: <?= e($taxId) ?></p><?php endif; ?>
@@ -95,7 +100,7 @@ function renderReceiptHtml(array $sale, array $items, array $shop): string
 
       <div class="center">
         <?php if ($footer !== ''): ?><p><?= e($footer) ?></p><?php endif; ?>
-        <p>Powered by NovaPOS</p>
+        <p>Powered by <?= e($shopBrand) ?></p>
       </div>
     </div>
     <?php
@@ -143,18 +148,28 @@ try {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Receipt #<?= (int) $sale['id'] ?></title>
+  <link rel="stylesheet" href="assets/css/ambient-layer.css" />
+  <link rel="stylesheet" href="assets/css/y2k-global.css" />
   <style>
-    :root {
-      color-scheme: light;
-    }
-
     body {
       margin: 0;
-      background: #eef1f6;
+      background:
+        radial-gradient(circle at 12% 15%, rgba(6, 182, 212, 0.18), transparent 30%),
+        radial-gradient(circle at 80% 8%, rgba(34, 211, 170, 0.14), transparent 26%),
+        radial-gradient(circle at 84% 88%, rgba(251, 113, 133, 0.16), transparent 26%),
+        #070b14;
       font-family: "Courier New", Courier, monospace;
       display: flex;
       justify-content: center;
       padding: 14px;
+    }
+
+    body[data-theme='light'] {
+      background:
+        radial-gradient(circle at 12% 15%, rgba(37, 99, 235, 0.17), transparent 30%),
+        radial-gradient(circle at 80% 8%, rgba(20, 184, 166, 0.12), transparent 26%),
+        radial-gradient(circle at 84% 88%, rgba(249, 115, 22, 0.14), transparent 26%),
+        #e2e8f0;
     }
 
     .receipt {
@@ -242,6 +257,7 @@ try {
       display: flex;
       justify-content: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .actions button {
@@ -250,6 +266,23 @@ try {
       padding: 6px 8px;
       cursor: pointer;
       font: inherit;
+    }
+
+    .theme-toggle {
+      border-color: rgba(125, 211, 252, 0.45) !important;
+      background: rgba(15, 23, 42, 0.92) !important;
+      color: #e2e8f0 !important;
+      border-radius: 0.6rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 6px 9px;
+    }
+
+    body[data-theme='light'] .theme-toggle {
+      border-color: rgba(15, 23, 42, 0.25) !important;
+      background: rgba(255, 255, 255, 0.92) !important;
+      color: #0f172a !important;
     }
 
     @media print {
@@ -270,16 +303,78 @@ try {
     }
   </style>
 </head>
-<body>
-  <div>
+<body class="ambient-soft">
+  <div class="matrix-grid" aria-hidden="true"></div>
+  <div class="scanner-line" aria-hidden="true"></div>
+  <div class="retro-orbs" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+  </div>
+  <div class="relative z-10">
     <?= renderReceiptHtml($sale, $items, $shop) ?>
     <div class="actions">
+      <button type="button" id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <span id="themeToggleIcon" aria-hidden="true">&#9790;</span>
+        <span id="themeToggleText">Dark</span>
+      </button>
       <button type="button" onclick="window.print()">Print</button>
       <button type="button" onclick="window.close()">Close</button>
     </div>
   </div>
 
+  <script src="assets/js/ambient-layer.js"></script>
   <script>
+    window.NovaAmbient.init({ pauseAfterMs: 5000 });
+
+    (function () {
+      const THEME_PREF_KEY = 'novapos_theme';
+      const themeToggle = document.getElementById('themeToggle');
+      const themeToggleIcon = document.getElementById('themeToggleIcon');
+      const themeToggleText = document.getElementById('themeToggleText');
+
+      function syncThemeToggle(theme) {
+        if (!themeToggle || !themeToggleIcon || !themeToggleText) {
+          return;
+        }
+        const isLight = theme === 'light';
+        themeToggleIcon.innerHTML = isLight ? '&#9728;' : '&#9790;';
+        themeToggleText.textContent = isLight ? 'Light' : 'Dark';
+      }
+
+      function applyTheme(themeName, persist) {
+        const theme = themeName === 'light' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
+        syncThemeToggle(theme);
+        if (persist) {
+          try {
+            localStorage.setItem(THEME_PREF_KEY, theme);
+          } catch (error) {
+          }
+        }
+      }
+
+      let savedTheme = 'dark';
+      try {
+        savedTheme = localStorage.getItem(THEME_PREF_KEY) || 'dark';
+      } catch (error) {
+      }
+      applyTheme(savedTheme, false);
+
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+          const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+          applyTheme(currentTheme === 'light' ? 'dark' : 'light', true);
+        });
+      }
+
+      window.addEventListener('storage', function (event) {
+        if (event.key !== THEME_PREF_KEY || event.newValue === null) {
+          return;
+        }
+        applyTheme(event.newValue, false);
+      });
+    })();
+
     const autoPrint = <?= $autoPrint ? 'true' : 'false' ?>;
     if (autoPrint) {
       setTimeout(() => {
@@ -287,5 +382,9 @@ try {
       }, 180);
     }
   </script>
-</body>
+  <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
 </html>
+

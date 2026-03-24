@@ -161,30 +161,151 @@ try {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inventory Adjustments</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
+  <link rel="stylesheet" href="assets/css/ambient-layer.css" />
+  <link rel="stylesheet" href="assets/css/y2k-global.css" />
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
+      --bg-base: #070b14;
+      --bg-glow-1: rgba(34, 211, 238, 0.2);
+      --bg-glow-2: rgba(251, 113, 133, 0.14);
       background:
-        radial-gradient(circle at 15% 10%, rgba(34, 211, 238, 0.2), transparent 28%),
-        radial-gradient(circle at 80% 90%, rgba(251, 113, 133, 0.14), transparent 25%),
-        #070b14;
+        radial-gradient(circle at 15% 10%, var(--bg-glow-1), transparent 28%),
+        radial-gradient(circle at 80% 90%, var(--bg-glow-2), transparent 25%),
+        var(--bg-base);
+      min-height: 100vh;
+    }
+
+    body[data-theme='light'] {
+      --bg-base: #dbeafe;
+      --bg-glow-1: rgba(59, 130, 246, 0.2);
+      --bg-glow-2: rgba(255, 107, 53, 0.18);
+      color: #1e40af;
+    }
+
+    body[data-theme='light'] .text-white,
+    body[data-theme='light'] .text-slate-100,
+    body[data-theme='light'] .text-slate-200 {
+      color: #0f172a !important;
+    }
+
+    body[data-theme='light'] .text-slate-300,
+    body[data-theme='light'] .text-slate-400 {
+      color: #334155 !important;
+    }
+
+    body[data-theme='light'] .bg-slate-900\/60,
+    body[data-theme='light'] .bg-slate-900\/50,
+    body[data-theme='light'] .bg-slate-900\/35,
+    body[data-theme='light'] .bg-slate-900\/30,
+    body[data-theme='light'] .bg-slate-900\/45,
+    body[data-theme='light'] .bg-slate-900\/65 {
+      background-color: rgba(255, 255, 255, 0.82) !important;
+    }
+
+    body[data-theme='light'] .border-white\/10,
+    body[data-theme='light'] .border-white\/15 {
+      border-color: rgba(15, 23, 42, 0.16) !important;
+    }
+
+    body[data-theme='light'] .utility-link {
+      border-color: rgba(51, 65, 85, 0.24);
+      background: rgba(241, 245, 249, 0.95);
+      color: #0f172a;
+    }
+
+    body[data-theme='light'] .utility-link:hover {
+      border-color: rgba(59, 130, 246, 0.45);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    body[data-theme='light'] .text-rose-100 {
+      color: #b91c1c !important;
+    }
+
+    body[data-theme='light'] .bg-rose-500\/10 {
+      background-color: rgba(254, 226, 226, 0.68) !important;
+    }
+
+    body[data-theme='light'] .bg-emerald-500\/10 {
+      background-color: rgba(209, 250, 229, 0.68) !important;
+    }
+
+    body[data-theme='light'] .text-emerald-200 {
+      color: #047857 !important;
+    }
+
+    .skip-link {
+      position: fixed;
+      left: 0.75rem;
+      top: 0.75rem;
+      z-index: 80;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.92);
+      color: #e2e8f0;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transform: translateY(-140%);
+      transition: transform 180ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 1px;
+    }
+
+    body[data-theme='light'] .skip-link {
+      border-color: rgba(15, 23, 42, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      color: #0f172a;
+    }
+
+    .utility-link {
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.5);
+      color: #dbeafe;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: background-color 170ms ease, border-color 170ms ease;
+    }
+
+    .utility-link:hover {
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .utility-link:focus-visible,
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.8);
+      outline-offset: 2px;
     }
   </style>
 </head>
-<body class="min-h-screen text-slate-100 antialiased">
-  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+<body class="ambient-medium min-h-screen text-slate-100 antialiased">
+  <a href="#mainContent" class="skip-link">Skip to inventory adjustments content</a>
+  <div class="matrix-grid" aria-hidden="true"></div>`r`n  <div class="scanner-line" aria-hidden="true"></div>`r`n  <div class="retro-orbs" aria-hidden="true">`r`n    <span class="orb orb-a"></span>`r`n    <span class="orb orb-b"></span>`r`n  </div>`r`n  <main id="mainContent" class="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-semibold">Inventory Adjustments</h1>
         <p class="text-sm text-slate-300">Signed in as <?= e((string) $currentUser['full_name']) ?> (<?= e((string) $currentUser['role']) ?>)</p>
       </div>
-      <div class="flex gap-2">
-        <a href="index.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Checkout</a>
-        <a href="dashboard.php" class="rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/10">Dashboard</a>
+      <div class="flex flex-wrap gap-2" aria-label="Inventory navigation">
+        <a href="index.php" class="utility-link">Checkout</a>
+        <a href="dashboard.php" class="utility-link">Dashboard</a>
+        <a href="settings.php" class="utility-link">Settings</a>
+        <button type="button" id="themeToggle" class="utility-link inline-flex items-center gap-1.5" aria-label="Toggle theme">
+          <span id="themeToggleIcon" class="inline-block w-4 text-center" aria-hidden="true">&#9790;</span>
+          <span id="themeToggleText">Dark</span>
+        </button>
       </div>
     </header>
 
@@ -202,7 +323,7 @@ try {
       </div>
     <?php endif; ?>
 
-    <section class="mb-5 rounded-3xl border border-white/10 bg-slate-900/60 p-5 shadow-2xl backdrop-blur-sm">
+    <section class="mb-5 rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
       <h2 class="mb-3 text-lg font-semibold">Manual Stock Adjustment</h2>
       <form method="post" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['csrf_token']) ?>" />
@@ -244,7 +365,7 @@ try {
         </label>
 
         <div class="flex items-end">
-          <button class="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 font-semibold text-slate-900">Apply Adjustment</button>
+          <button class="min-h-[42px] w-full rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2 text-sm font-semibold text-slate-900">Apply Adjustment</button>
         </div>
       </form>
     </section>
@@ -253,14 +374,14 @@ try {
       <table class="min-w-full text-sm">
         <thead class="bg-white/5 text-slate-300">
           <tr>
-            <th class="px-3 py-2 text-left">When</th>
-            <th class="px-3 py-2 text-left">Product</th>
-            <th class="px-3 py-2 text-left">Type</th>
-            <th class="px-3 py-2 text-right">Qty Delta</th>
-            <th class="px-3 py-2 text-right">Before</th>
-            <th class="px-3 py-2 text-right">After</th>
-            <th class="px-3 py-2 text-left">By</th>
-            <th class="px-3 py-2 text-left">Notes</th>
+            <th class="px-3 py-2.5 text-left">When</th>
+            <th class="px-3 py-2.5 text-left">Product</th>
+            <th class="px-3 py-2.5 text-left">Type</th>
+            <th class="px-3 py-2.5 text-right">Qty Delta</th>
+            <th class="px-3 py-2.5 text-right">Before</th>
+            <th class="px-3 py-2.5 text-right">After</th>
+            <th class="px-3 py-2.5 text-left">By</th>
+            <th class="px-3 py-2.5 text-left">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -272,14 +393,14 @@ try {
             <?php foreach ($recentMovements as $row): ?>
               <?php $delta = (int) $row['qty_change']; ?>
               <tr class="border-t border-white/10">
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['created_at']) ?></td>
-                <td class="px-3 py-2 text-white"><?= e((string) $row['product_name']) ?> <span class="text-xs text-slate-400">(<?= e((string) $row['sku']) ?>)</span></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['movement_type']) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['created_at']) ?></td>
+                <td class="px-3 py-2.5 text-white"><?= e((string) $row['product_name']) ?> <span class="text-xs text-slate-400">(<?= e((string) $row['sku']) ?>)</span></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['movement_type']) ?></td>
                 <td class="px-3 py-2 text-right <?= $delta < 0 ? 'text-rose-200' : 'text-emerald-200' ?>"><?= $delta ?></td>
-                <td class="px-3 py-2 text-right text-slate-200"><?= (int) $row['stock_before'] ?></td>
-                <td class="px-3 py-2 text-right text-slate-200"><?= (int) $row['stock_after'] ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) $row['changed_by_name']) ?></td>
-                <td class="px-3 py-2 text-slate-300"><?= e((string) ($row['notes'] ?? '')) ?></td>
+                <td class="px-3 py-2.5 text-right text-slate-200"><?= (int) $row['stock_before'] ?></td>
+                <td class="px-3 py-2.5 text-right text-slate-200"><?= (int) $row['stock_after'] ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) $row['changed_by_name']) ?></td>
+                <td class="px-3 py-2.5 text-slate-300"><?= e((string) ($row['notes'] ?? '')) ?></td>
               </tr>
             <?php endforeach; ?>
           <?php endif; ?>
@@ -287,5 +408,63 @@ try {
       </table>
     </section>
   </main>
-</body>
+  <script src="assets/js/ambient-layer.js"></script>
+  <script>
+    window.NovaAmbient.init({ pauseAfterMs: 7000 });
+
+    (function () {
+      const THEME_PREF_KEY = 'novapos_theme';
+      const themeToggle = document.getElementById('themeToggle');
+      const themeToggleIcon = document.getElementById('themeToggleIcon');
+      const themeToggleText = document.getElementById('themeToggleText');
+
+      function syncThemeToggle(theme) {
+        if (!themeToggle || !themeToggleIcon || !themeToggleText) {
+          return;
+        }
+        const isLight = theme === 'light';
+        themeToggleIcon.innerHTML = isLight ? '&#9728;' : '&#9790;';
+        themeToggleText.textContent = isLight ? 'Light' : 'Dark';
+      }
+
+      function applyTheme(themeName, persist) {
+        const theme = themeName === 'light' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
+        syncThemeToggle(theme);
+        if (persist) {
+          try {
+            localStorage.setItem(THEME_PREF_KEY, theme);
+          } catch (error) {
+          }
+        }
+      }
+
+      let savedTheme = 'dark';
+      try {
+        savedTheme = localStorage.getItem(THEME_PREF_KEY) || 'dark';
+      } catch (error) {
+      }
+      applyTheme(savedTheme, false);
+
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+          const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+          applyTheme(currentTheme === 'light' ? 'dark' : 'light', true);
+        });
+      }
+
+      window.addEventListener('storage', function (event) {
+        if (event.key !== THEME_PREF_KEY || event.newValue === null) {
+          return;
+        }
+        applyTheme(event.newValue, false);
+      });
+    })();
+  </script>
+  <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
 </html>
+
+

@@ -30,7 +30,7 @@ try {
             WHERE p.is_active = 1';
 
     if ($query !== '') {
-        $sql .= ' AND (p.name LIKE :term OR p.barcode LIKE :term)';
+        $sql .= ' AND (p.name LIKE :term OR p.barcode LIKE :term OR p.sku LIKE :term OR c.name LIKE :term)';
     }
 
     $sql .= ' ORDER BY p.name ASC LIMIT 60';

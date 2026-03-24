@@ -52,6 +52,8 @@ CREATE TABLE categories (
 CREATE TABLE shop_settings (
   id TINYINT UNSIGNED NOT NULL DEFAULT 1,
   shop_name VARCHAR(140) NOT NULL DEFAULT 'My Shop',
+  shop_logo_url VARCHAR(255) NULL,
+  business_tagline VARCHAR(160) NULL,
   shop_address VARCHAR(255) NULL,
   shop_phone VARCHAR(50) NULL,
   shop_tax_id VARCHAR(80) NULL,
@@ -62,12 +64,37 @@ CREATE TABLE shop_settings (
   receipt_footer VARCHAR(255) NULL,
   theme_accent_primary VARCHAR(7) NOT NULL DEFAULT '#06B6D4',
   theme_accent_secondary VARCHAR(7) NOT NULL DEFAULT '#22D3AA',
+  enable_discounts TINYINT(1) NOT NULL DEFAULT 0,
+  enable_returns TINYINT(1) NOT NULL DEFAULT 0,
+  enable_multi_store TINYINT(1) NOT NULL DEFAULT 0,
+  enable_time_clock TINYINT(1) NOT NULL DEFAULT 0,
+  enable_email_notifications TINYINT(1) NOT NULL DEFAULT 0,
+  smtp_host VARCHAR(255) NULL,
+  smtp_port INT DEFAULT 587,
+  smtp_username VARCHAR(255) NULL,
+  smtp_password VARCHAR(255) NULL,
+  smtp_encryption ENUM('tls', 'ssl', 'none') DEFAULT 'tls',
+  email_from_address VARCHAR(255) NULL,
+  email_from_name VARCHAR(255) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT chk_shop_tax_rate_nonnegative CHECK (tax_rate_percent >= 0),
   CONSTRAINT chk_shop_primary_hex CHECK (theme_accent_primary REGEXP '^#[0-9A-Fa-f]{6}$'),
   CONSTRAINT chk_shop_secondary_hex CHECK (theme_accent_secondary REGEXP '^#[0-9A-Fa-f]{6}$')
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE time_clock (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  clock_in TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  clock_out TIMESTAMP NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_time_clock_user (user_id),
+  KEY idx_time_clock_clock_in (clock_in),
+  CONSTRAINT fk_time_clock_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE products (
@@ -81,6 +108,7 @@ CREATE TABLE products (
   cost_price DECIMAL(12,2) NULL,
   stock_qty INT NOT NULL DEFAULT 0,
   reorder_level INT NOT NULL DEFAULT 0,
+  image_path VARCHAR(255) NULL,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
