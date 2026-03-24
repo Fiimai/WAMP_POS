@@ -53,6 +53,7 @@ foreach ($availableStores as $store) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Management - <?= e($shopName) ?> POS</title>
     <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
+    <link rel="stylesheet" href="assets/css/ambient-layer.css" />
     <script>
         tailwind.config = {
             theme: {
@@ -65,7 +66,8 @@ foreach ($availableStores as $store) {
             }
         };
     </script>
-    <style>
+    <link rel="stylesheet" href="assets/css/y2k-global.css" />
+  <style>
         body {
             background:
                 radial-gradient(circle at 12% 15%, rgba(6, 182, 212, 0.18), transparent 30%),
@@ -117,10 +119,72 @@ foreach ($availableStores as $store) {
             opacity: 0.92;
             flex-shrink: 0;
         }
+
+        body[data-theme='light'] {
+            background:
+                radial-gradient(circle at 12% 15%, rgba(37, 99, 235, 0.17), transparent 30%),
+                radial-gradient(circle at 80% 8%, rgba(20, 184, 166, 0.12), transparent 26%),
+                radial-gradient(circle at 84% 88%, rgba(249, 115, 22, 0.14), transparent 26%),
+                #e2e8f0;
+            color: #0f172a;
+        }
+
+        body[data-theme='light'] .bg-slate-900,
+        body[data-theme='light'] .bg-slate-900\/40,
+        body[data-theme='light'] .bg-slate-800 {
+            background-color: rgba(248, 250, 252, 0.92) !important;
+        }
+
+        body[data-theme='light'] .text-white,
+        body[data-theme='light'] .text-slate-300,
+        body[data-theme='light'] .text-slate-400,
+        body[data-theme='light'] .text-cyan-200,
+        body[data-theme='light'] .text-amber-300,
+        body[data-theme='light'] .text-emerald-300 {
+            color: #1e293b !important;
+        }
+
+        body[data-theme='light'] .border-white\/10,
+        body[data-theme='light'] .border-white\/20 {
+            border-color: rgba(15, 23, 42, 0.18) !important;
+        }
+
+        body[data-theme='light'] .utility-link {
+            border-color: rgba(51, 65, 85, 0.24);
+            background: rgba(241, 245, 249, 0.95);
+            color: #0f172a;
+        }
+
+        body[data-theme='light'] .utility-link:hover {
+            border-color: rgba(59, 130, 246, 0.42);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        body[data-theme='light'] .utility-link-active {
+            border-color: rgba(37, 99, 235, 0.35);
+            background: rgba(59, 130, 246, 0.14);
+            color: #1e3a8a;
+        }
+
+        body[data-theme='light'] .glass {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.8));
+            border-color: rgba(148, 163, 184, 0.32);
+            box-shadow: 0 10px 30px rgba(148, 163, 184, 0.35);
+        }
+
+        body[data-theme='light'] #themeToggle {
+            color: #0f172a;
+        }
     </style>
 </head>
-<body>
-    <div class="min-h-screen bg-slate-900 text-white">
+<body class="ambient-medium">
+    <div class="matrix-grid" aria-hidden="true"></div>
+    <div class="scanner-line" aria-hidden="true"></div>
+    <div class="retro-orbs" aria-hidden="true">
+        <span class="orb orb-a"></span>
+        <span class="orb orb-b"></span>
+    </div>
+    <div class="relative z-10 min-h-screen bg-slate-900 text-white">
         <main class="max-w-7xl mx-auto px-4 py-8">
             <nav class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300" aria-label="Primary navigation">
                 <span class="rounded-lg border border-white/10 bg-slate-900/40 px-2 py-1">Signed in as <?= e((string) $currentUser['full_name']) ?> (<?= e((string) $currentUser['role']) ?>)</span>
@@ -135,6 +199,10 @@ foreach ($availableStores as $store) {
                     <?php if ($enableTimeClock): ?>
                         <a href="time_clock.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-9h2v4H9V7z"/></svg><span>Time Clock</span></a>
                     <?php endif; ?>
+                    <button type="button" id="themeToggle" class="utility-link icon-link" aria-label="Toggle theme">
+                        <span id="themeToggleIcon" class="inline-block w-4 text-center" aria-hidden="true">&#9790;</span>
+                        <span id="themeToggleText">Dark</span>
+                    </button>
                 </div>
             </nav>
 
@@ -174,5 +242,61 @@ foreach ($availableStores as $store) {
             </section>
         </main>
     </div>
-</body>
+    <script src="assets/js/ambient-layer.js"></script>
+    <script>
+        window.NovaAmbient.init({ pauseAfterMs: 7000 });
+
+        (function () {
+            const THEME_PREF_KEY = 'novapos_theme';
+            const themeToggle = document.getElementById('themeToggle');
+            const themeToggleIcon = document.getElementById('themeToggleIcon');
+            const themeToggleText = document.getElementById('themeToggleText');
+
+            function syncThemeToggle(theme) {
+                if (!themeToggle || !themeToggleIcon || !themeToggleText) {
+                    return;
+                }
+                const isLight = theme === 'light';
+                themeToggleIcon.innerHTML = isLight ? '&#9728;' : '&#9790;';
+                themeToggleText.textContent = isLight ? 'Light' : 'Dark';
+            }
+
+            function applyTheme(themeName, persist) {
+                const theme = themeName === 'light' ? 'light' : 'dark';
+                document.body.setAttribute('data-theme', theme);
+                syncThemeToggle(theme);
+                if (persist) {
+                    try {
+                        localStorage.setItem(THEME_PREF_KEY, theme);
+                    } catch (error) {
+                    }
+                }
+            }
+
+            let savedTheme = 'dark';
+            try {
+                savedTheme = localStorage.getItem(THEME_PREF_KEY) || 'dark';
+            } catch (error) {
+            }
+            applyTheme(savedTheme, false);
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function () {
+                    const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+                    applyTheme(currentTheme === 'light' ? 'dark' : 'light', true);
+                });
+            }
+
+            window.addEventListener('storage', function (event) {
+                if (event.key !== THEME_PREF_KEY || event.newValue === null) {
+                    return;
+                }
+                applyTheme(event.newValue, false);
+            });
+        })();
+    </script>
+  <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
 </html>

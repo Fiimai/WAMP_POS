@@ -33,7 +33,8 @@ if (file_exists($maintenanceFile)) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Maintenance Mode</title>
-        <style>
+        <link rel="stylesheet" href="assets/css/y2k-global.css" />
+  <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -83,7 +84,10 @@ if (file_exists($maintenanceFile)) {
             <p><?php echo htmlspecialchars($message); ?></p>
             <p><small>We'll be back shortly!</small></p>
         </div>
-    </body>
+      <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
     </html>
     <?php
     exit;

@@ -68,7 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         };
     </script>
-    <style>
+    <link rel="stylesheet" href="assets/css/y2k-global.css" />
+  <style>
         body {
             background:
                 radial-gradient(circle at 12% 15%, rgba(6, 182, 212, 0.18), transparent 30%),
@@ -307,5 +308,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             })();
         </script>
-</body>
+  <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
 </html>

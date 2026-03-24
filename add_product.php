@@ -114,7 +114,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Product</title>
-  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>`r`n  <link rel="stylesheet" href="assets/css/ambient-layer.css" />
+  <script src="assets/vendor/tailwindcss/tailwindcss.js"></script>
+  <link rel="stylesheet" href="assets/css/ambient-layer.css" />
+  <link rel="stylesheet" href="assets/css/y2k-global.css" />
   <style>
     body {
       font-family: 'Space Grotesk', sans-serif;
@@ -411,7 +413,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       });
     })();
   </script>
-</body>
+  <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
 </html>
 
 

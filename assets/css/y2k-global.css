@@ -1,0 +1,360 @@
+/* Global Y2K layer for all non-login POS pages */
+:root {
+  --y2k-rainbow: linear-gradient(120deg, #ff006e, #ffbe0b, #00f5d4, #3a86ff, #8338ec, #ff006e);
+  --y2k-neon-cyan: #00f5ff;
+  --y2k-neon-pink: #ff45da;
+  --y2k-chrome-1: rgba(255, 255, 255, 0.92);
+  --y2k-chrome-2: rgba(203, 213, 225, 0.56);
+  --y2k-border: rgba(255, 255, 255, 0.36);
+}
+
+body.y2k-global {
+  font-family: 'Arial Black', Arial, sans-serif !important;
+  font-weight: 400;
+}
+
+body.y2k-global h1,
+body.y2k-global h2,
+body.y2k-global h3,
+body.y2k-global h4,
+body.y2k-global h5,
+body.y2k-global h6,
+body.y2k-global p,
+body.y2k-global a,
+body.y2k-global button,
+body.y2k-global label,
+body.y2k-global th,
+body.y2k-global td,
+body.y2k-global span,
+body.y2k-global li,
+body.y2k-global .utility-link {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+body.y2k-global h1,
+body.y2k-global h2,
+body.y2k-global h3 {
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+body.y2k-global h1 {
+  font-size: clamp(22px, 2.3vw, 36px);
+}
+
+body.y2k-global h2 {
+  font-size: clamp(16px, 1.8vw, 28px);
+}
+
+body.y2k-global,
+body.y2k-global p,
+body.y2k-global td,
+body.y2k-global th,
+body.y2k-global label,
+body.y2k-global input,
+body.y2k-global select,
+body.y2k-global textarea,
+body.y2k-global button {
+  font-size: clamp(11px, 0.92vw, 15px);
+}
+
+body.y2k-global .glass,
+body.y2k-global .receipt,
+body.y2k-global .utility-link,
+body.y2k-global button,
+body.y2k-global input,
+body.y2k-global select,
+body.y2k-global textarea {
+  position: relative;
+  border: 1px solid var(--y2k-border) !important;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(148, 163, 184, 0.08));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 0 20px rgba(59, 130, 246, 0.18);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+body.y2k-global .glass::before,
+body.y2k-global .receipt::before,
+body.y2k-global .utility-link::before,
+body.y2k-global button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--y2k-rainbow);
+  background-size: 300% 300%;
+  animation: borderShift 4s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+body.y2k-global .y2k-neon,
+body.y2k-global h1,
+body.y2k-global h2 {
+  color: #d9f9ff;
+  text-shadow: 0 0 6px rgba(0, 245, 255, 0.7), 0 0 14px rgba(255, 69, 218, 0.42);
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+body.y2k-global input:focus,
+body.y2k-global select:focus,
+body.y2k-global textarea:focus {
+  outline: none;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.45), 0 0 18px rgba(244, 114, 182, 0.4);
+  background-image: linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.72));
+}
+
+body.y2k-global .portal-btn,
+body.y2k-global button[type='submit'] {
+  font-weight: 900;
+  color: #f8fafc;
+  background-image: var(--y2k-rainbow) !important;
+  background-size: 250% 250% !important;
+  animation: chromeShift 6s ease-in-out infinite;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.38), 0 0 24px rgba(236, 72, 153, 0.24);
+}
+
+body.y2k-global .portal-btn:hover,
+body.y2k-global button[type='submit']:hover,
+body.y2k-global .utility-link:hover {
+  filter: saturate(1.16) hue-rotate(14deg);
+}
+
+body.y2k-global .quantum-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+body.y2k-global .quantum-toggle::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.42), transparent 62%);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+body.y2k-global .quantum-toggle:active::after {
+  transform: scale(1);
+  opacity: 1;
+}
+
+body.y2k-global .matrix-loader {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  border-top-color: #00f5ff;
+  border-right-color: #ff45da;
+  animation: spinRing 0.9s linear infinite;
+}
+
+body.y2k-global .matrix-loader::before,
+body.y2k-global .matrix-loader::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+}
+
+body.y2k-global .matrix-loader::before {
+  inset: 7px;
+  border-top-color: #7c3aed;
+  border-left-color: #00f5ff;
+  animation: spinRingReverse 1.1s linear infinite;
+}
+
+body.y2k-global .matrix-loader::after {
+  inset: 14px;
+  border-top-color: #fb7185;
+  border-right-color: #22d3ee;
+  animation: spinRing 1.5s linear infinite;
+}
+
+body.y2k-global .success-portal {
+  position: relative;
+  isolation: isolate;
+}
+
+body.y2k-global .success-portal::after {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: inherit;
+  border: 2px solid rgba(34, 211, 238, 0.56);
+  animation: portalExpand 1.5s ease-out infinite;
+  pointer-events: none;
+}
+
+body.y2k-global .chrome-logo {
+  position: fixed;
+  right: 14px;
+  top: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  z-index: 40;
+  pointer-events: none;
+  background: conic-gradient(from 0deg, #ff006e, #ffbe0b, #00f5d4, #3a86ff, #8338ec, #ff006e);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.6), 0 0 24px rgba(244, 114, 182, 0.42);
+  animation: logoRotate 8s linear infinite;
+}
+
+body.y2k-global .chrome-logo::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  background: rgba(7, 11, 20, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  animation: logoRotateReverse 6s linear infinite;
+}
+
+body.y2k-global.matrix-glitch {
+  animation: matrixGlitch 0.18s steps(2, end);
+}
+
+@keyframes chromeShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes logoRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes logoRotateReverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes neonPulse {
+  0%,
+  100% {
+    filter: brightness(0.95);
+  }
+
+  50% {
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes matrixGlitch {
+  0% {
+    transform: translateX(0);
+    filter: hue-rotate(0deg);
+  }
+
+  25% {
+    transform: translateX(-1px) skewX(0.6deg);
+    filter: hue-rotate(18deg);
+  }
+
+  50% {
+    transform: translateX(1px) skewX(-0.4deg);
+    filter: hue-rotate(-20deg);
+  }
+
+  100% {
+    transform: translateX(0);
+    filter: hue-rotate(0deg);
+  }
+}
+
+@keyframes portalExpand {
+  0% {
+    opacity: 0.68;
+    transform: scale(0.88) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.28) rotate(180deg);
+  }
+}
+
+@keyframes borderShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes spinRing {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinRingReverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@media (max-width: 768px) {
+  body.y2k-global h1 {
+    letter-spacing: 1px;
+  }
+
+  body.y2k-global h2,
+  body.y2k-global h3,
+  body.y2k-global p,
+  body.y2k-global label,
+  body.y2k-global a,
+  body.y2k-global button {
+    letter-spacing: 1px;
+  }
+
+  body.y2k-global .chrome-logo {
+    width: 30px;
+    height: 30px;
+    right: 8px;
+    top: 8px;
+  }
+}

@@ -196,6 +196,7 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     };
   </script>
 
+  <link rel="stylesheet" href="assets/css/y2k-global.css" />
   <style>
     body {
       --shop-accent-primary: <?= e($themePrimary) ?>;
@@ -2239,7 +2240,10 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     loadScannerSoundPreference();
     loadCart();
   </script>
-</body>
+  <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
 </html>
 
 

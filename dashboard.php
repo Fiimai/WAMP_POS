@@ -165,6 +165,7 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
     };
   </script>
 
+  <link rel="stylesheet" href="assets/css/y2k-global.css" />
   <style>
     body {
       --bg-base: #050912;
@@ -1124,6 +1125,9 @@ $trendSalesJson = json_encode($trendSales, JSON_UNESCAPED_SLASHES);
       },
     });
   </script>
-</body>
+  <script src="assets/js/y2k-global.js"></script>
+  <script>
+    window.NovaY2K.init();
+  </script></body>
 </html>
 
