@@ -7,8 +7,6 @@ require __DIR__ . '/app/bootstrap.php';
 use App\Core\Auth;
 use App\Core\Database;
 use App\Models\ShopSettings;
-use PDO;
-use Throwable;
 
 /**
  * @return string

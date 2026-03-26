@@ -41,8 +41,12 @@ class MigrationManager
                 continue;
             }
 
+            $startedTransaction = false;
             try {
-                $this->pdo->beginTransaction();
+                if (!$this->pdo->inTransaction()) {
+                    $this->pdo->beginTransaction();
+                    $startedTransaction = true;
+                }
 
                 // Run the migration
                 if (is_callable($migration)) {
@@ -58,12 +62,17 @@ class MigrationManager
                 ");
                 $stmt->execute([$migrationId, $batch]);
 
-                $this->pdo->commit();
+                if ($startedTransaction && $this->pdo->inTransaction()) {
+                    $this->pdo->commit();
+                }
                 $executed[] = $migrationId;
 
-            } catch (Exception $e) {
-                $this->pdo->rollBack();
-                throw new RuntimeException("Migration {$migrationId} failed: " . $e->getMessage());
+            } catch (\Throwable $e) {
+                if ($startedTransaction && $this->pdo->inTransaction()) {
+                    $this->pdo->rollBack();
+                }
+
+                throw new \RuntimeException("Migration {$migrationId} failed: " . $e->getMessage(), 0, $e);
             }
         }
 
