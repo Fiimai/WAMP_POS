@@ -318,7 +318,7 @@ try {
         <span id="themeToggleText">Dark</span>
       </button>
       <button type="button" onclick="window.print()">Print</button>
-      <button type="button" onclick="window.close()">Close</button>
+      <button type="button" id="closeReceiptBtn">Close / Back</button>
     </div>
   </div>
 
@@ -376,6 +376,24 @@ try {
     })();
 
     const autoPrint = <?= $autoPrint ? 'true' : 'false' ?>;
+    const closeReceiptBtn = document.getElementById('closeReceiptBtn');
+
+    if (closeReceiptBtn) {
+      closeReceiptBtn.addEventListener('click', function () {
+        try {
+          window.close();
+        } catch (error) {
+        }
+
+        // If the browser blocks close() on this tab, navigate to a safe page.
+        setTimeout(function () {
+          if (!window.closed) {
+            window.location.href = 'receipt_history.php';
+          }
+        }, 220);
+      });
+    }
+
     if (autoPrint) {
       setTimeout(() => {
         window.print();

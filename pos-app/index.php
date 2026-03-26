@@ -1656,7 +1656,10 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
               </div>
               <div class="text-right">
                 <p class="text-sm font-semibold text-mint">${formatMoney(item.line_total)}</p>
-                <button class="remove-item mt-1 text-[11px] text-rose-300 hover:text-rose-200" data-product-id="${item.product_id}">${t('remove')}</button>
+                <div class="mt-2 flex items-center justify-end gap-2">
+                  <button class="cart-add-more rounded-lg border border-white/20 bg-white/5 px-2 py-1 text-[11px] font-medium text-slate-200 hover:bg-white/10" data-product-id="${item.product_id}">+1</button>
+                  <button class="remove-item rounded-lg border border-rose-300/35 bg-rose-500/15 px-2 py-1 text-[11px] font-semibold text-rose-100 hover:bg-rose-500/25" data-product-id="${item.product_id}">${t('remove')}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1675,6 +1678,12 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       document.querySelectorAll('.remove-item').forEach((button) => {
         button.addEventListener('click', async () => {
           await removeFromCart(Number(button.dataset.productId));
+        });
+      });
+
+      document.querySelectorAll('.cart-add-more').forEach((button) => {
+        button.addEventListener('click', async () => {
+          await addToCart(Number(button.dataset.productId));
         });
       });
     }

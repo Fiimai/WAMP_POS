@@ -64,10 +64,19 @@ final class CartController
     public function remove(int $productId): array
     {
         $cart = $this->cartItems();
-        unset($cart[(string) $productId]);
+
+        $key = (string) $productId;
+        if (isset($cart[$key])) {
+            $cart[$key]['qty'] = max(0, (int) ($cart[$key]['qty'] ?? 0) - 1);
+
+            if ($cart[$key]['qty'] <= 0) {
+                unset($cart[$key]);
+            }
+        }
+
         $_SESSION['cart'] = $cart;
 
-        return ['ok' => true, 'message' => 'Removed from cart', 'cart' => $this->withTotals($cart)];
+        return ['ok' => true, 'message' => 'Cart item updated', 'cart' => $this->withTotals($cart)];
     }
 
     public function clear(): array
