@@ -31,7 +31,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             if ($result) {
                 $success = 'Test email sent successfully to ' . $testEmail;
             } else {
-                $errors[] = 'Failed to send test email. Please check your SMTP settings.';
+              $detail = $emailService->getLastError();
+              if ($detail !== null && $detail !== '') {
+                $errors[] = 'Failed to send test email: ' . $detail;
+              } else {
+                $errors[] = 'Failed to send test email. Please check your SMTP settings and server mail transport.';
+              }
             }
         }
     }
@@ -119,6 +124,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     <div class="rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-2xl backdrop-blur-sm">
       <h2 class="mb-4 text-lg font-semibold">Send Test Email</h2>
       <form method="post">
+        <input type="hidden" name="csrf_token" value="<?= e((string) ($_SESSION['csrf_token'] ?? '')) ?>" />
         <input type="hidden" name="action" value="test_email" />
         <label class="block text-sm mb-3">
           <span class="mb-1 block text-slate-300">Test Email Address</span>

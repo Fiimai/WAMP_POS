@@ -8,42 +8,308 @@ use App\Models\ShopSettings;
 
 final class EmailService
 {
+    private ?string $lastError = null;
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
     public function sendEmail(string $to, string $subject, string $body, ?string $fromName = null, ?string $fromEmail = null): bool
     {
+        $this->lastError = null;
         $settings = ShopSettings::get();
 
         if (!ShopSettings::isFeatureEnabled('enable_email_notifications')) {
-            return false; // Email notifications are disabled
+            $this->lastError = 'Email notifications are disabled in Settings.';
+            return false;
         }
 
         $smtpHost = $settings['smtp_host'] ?? '';
-        $smtpPort = $settings['smtp_port'] ?? 587;
+        $smtpPort = (int) ($settings['smtp_port'] ?? 587);
         $smtpUsername = $settings['smtp_username'] ?? '';
         $smtpPassword = $settings['smtp_password'] ?? '';
-        $smtpEncryption = $settings['smtp_encryption'] ?? 'tls';
+        $smtpEncryption = strtolower(trim((string) ($settings['smtp_encryption'] ?? 'tls')));
 
         if (empty($smtpHost) || empty($smtpUsername) || empty($smtpPassword)) {
-            return false; // SMTP not configured
+            $this->lastError = 'SMTP settings are incomplete. Configure host, username, and password.';
+            return false;
         }
 
         $fromEmail = $fromEmail ?? ($settings['email_from_address'] ?? '');
         $fromName = $fromName ?? ($settings['email_from_name'] ?? '');
 
         if (empty($fromEmail)) {
-            return false; // From email not set
+            $this->lastError = 'From email address is not configured in Settings.';
+            return false;
         }
 
-        // For now, we'll use a simple mail() function implementation
-        // In production, you should use PHPMailer or similar
-        $headers = [
-            'MIME-Version: 1.0',
-            'Content-type: text/html; charset=UTF-8',
-            'From: ' . ($fromName ? $fromName . ' <' . $fromEmail . '>' : $fromEmail),
-            'Reply-To: ' . $fromEmail,
-            'X-Mailer: PHP/' . phpversion()
-        ];
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            $this->lastError = 'Recipient email address is invalid.';
+            return false;
+        }
 
-        return mail($to, $subject, $body, implode("\r\n", $headers));
+        if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+            $this->lastError = 'From email address is invalid.';
+            return false;
+        }
+
+        return $this->sendViaSmtp(
+            $smtpHost,
+            $smtpPort,
+            $smtpEncryption,
+            $smtpUsername,
+            $smtpPassword,
+            $fromEmail,
+            $fromName ?? '',
+            $to,
+            $subject,
+            $body
+        );
+    }
+
+    private function sendViaSmtp(
+        string $smtpHost,
+        int $smtpPort,
+        string $smtpEncryption,
+        string $smtpUsername,
+        string $smtpPassword,
+        string $fromEmail,
+        string $fromName,
+        string $to,
+        string $subject,
+        string $body
+    ): bool {
+        $attempts = 0;
+        do {
+            $attempts++;
+            if ($this->sendViaSmtpOnce(
+                $smtpHost,
+                $smtpPort,
+                $smtpEncryption,
+                $smtpUsername,
+                $smtpPassword,
+                $fromEmail,
+                $fromName,
+                $to,
+                $subject,
+                $body
+            )) {
+                return true;
+            }
+
+            if (!$this->isTransientFailure($this->lastError)) {
+                return false;
+            }
+
+            if ($attempts < 2) {
+                usleep(400000);
+            }
+        } while ($attempts < 2);
+
+        return false;
+    }
+
+    private function sendViaSmtpOnce(
+        string $smtpHost,
+        int $smtpPort,
+        string $smtpEncryption,
+        string $smtpUsername,
+        string $smtpPassword,
+        string $fromEmail,
+        string $fromName,
+        string $to,
+        string $subject,
+        string $body
+    ): bool {
+        if (!in_array($smtpEncryption, ['tls', 'ssl', 'none'], true)) {
+            $this->lastError = 'SMTP encryption must be one of: tls, ssl, none.';
+            return false;
+        }
+
+        if ($smtpPort < 1 || $smtpPort > 65535) {
+            $this->lastError = 'SMTP port must be between 1 and 65535.';
+            return false;
+        }
+
+        $transport = $smtpEncryption === 'ssl' ? 'ssl' : 'tcp';
+        $remote = $transport . '://' . $smtpHost . ':' . $smtpPort;
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+            ],
+        ]);
+
+        $socket = @stream_socket_client($remote, $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $context);
+        if (!is_resource($socket)) {
+            $this->lastError = 'SMTP connection failed: ' . $errstr . ' (' . $errno . ')';
+            return false;
+        }
+
+        stream_set_timeout($socket, 25);
+
+        try {
+            if ($this->smtpRead($socket, [220]) === null) {
+                return false;
+            }
+
+            $clientHost = gethostname() ?: 'localhost';
+            $ehloResponse = $this->smtpWriteRead($socket, 'EHLO ' . $clientHost, [250]);
+            if ($ehloResponse === null) {
+                return false;
+            }
+
+            $supportsStartTls = stripos($ehloResponse, 'STARTTLS') !== false;
+            $shouldUseStartTls = $smtpEncryption === 'tls'
+                || ($smtpEncryption === 'none' && ($supportsStartTls || $smtpPort === 587));
+
+            if ($shouldUseStartTls) {
+                if ($this->smtpWriteRead($socket, 'STARTTLS', [220]) === null) {
+                    if ($smtpEncryption === 'tls' || $smtpPort === 587) {
+                        return false;
+                    }
+                } else {
+                    $cryptoEnabled = @stream_socket_enable_crypto(
+                        $socket,
+                        true,
+                        STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT
+                    );
+                    if ($cryptoEnabled !== true) {
+                        $this->lastError = 'Failed to negotiate STARTTLS with SMTP server.';
+                        return false;
+                    }
+
+                    if ($this->smtpWriteRead($socket, 'EHLO ' . $clientHost, [250]) === null) {
+                        return false;
+                    }
+                }
+            }
+
+            if ($this->smtpWriteRead($socket, 'AUTH LOGIN', [334]) === null) {
+                return false;
+            }
+
+            if ($this->smtpWriteRead($socket, base64_encode($smtpUsername), [334]) === null) {
+                return false;
+            }
+
+            if ($this->smtpWriteRead($socket, base64_encode($smtpPassword), [235]) === null) {
+                return false;
+            }
+
+            if ($this->smtpWriteRead($socket, 'MAIL FROM:<' . $fromEmail . '>', [250]) === null) {
+                return false;
+            }
+
+            if ($this->smtpWriteRead($socket, 'RCPT TO:<' . $to . '>', [250, 251]) === null) {
+                return false;
+            }
+
+            if ($this->smtpWriteRead($socket, 'DATA', [354]) === null) {
+                return false;
+            }
+
+            $safeFromName = str_replace(["\r", "\n"], '', trim($fromName));
+            $subjectHeader = function_exists('mb_encode_mimeheader')
+                ? mb_encode_mimeheader($subject, 'UTF-8')
+                : $subject;
+
+            $headers = [
+                'Date: ' . date(DATE_RFC2822),
+                'From: ' . ($safeFromName !== '' ? $safeFromName . ' <' . $fromEmail . '>' : $fromEmail),
+                'To: ' . $to,
+                'Subject: ' . $subjectHeader,
+                'MIME-Version: 1.0',
+                'Content-Type: text/html; charset=UTF-8',
+                'Content-Transfer-Encoding: 8bit',
+            ];
+
+            $normalizedBody = str_replace(["\r\n", "\r"], "\n", $body);
+            $normalizedBody = str_replace("\n", "\r\n", $normalizedBody);
+            $normalizedBody = preg_replace('/^\./m', '..', $normalizedBody) ?? $normalizedBody;
+
+            $message = implode("\r\n", $headers) . "\r\n\r\n" . $normalizedBody;
+            fwrite($socket, $message . "\r\n.\r\n");
+
+            if ($this->smtpRead($socket, [250]) === null) {
+                return false;
+            }
+
+            $this->smtpWriteRead($socket, 'QUIT', [221]);
+            return true;
+        } finally {
+            fclose($socket);
+        }
+    }
+
+    /**
+     * @param resource $socket
+     */
+    private function smtpWriteRead($socket, string $command, array $expectedCodes): ?string
+    {
+        $bytes = @fwrite($socket, $command . "\r\n");
+        if ($bytes === false || $bytes < 1) {
+            $this->lastError = 'Failed to write SMTP command' . ($command !== '' ? ' (' . $command . ')' : '') . ' to server.';
+            return null;
+        }
+
+        return $this->smtpRead($socket, $expectedCodes, $command);
+    }
+
+    /**
+     * @param resource $socket
+     */
+    private function smtpRead($socket, array $expectedCodes, string $command = ''): ?string
+    {
+        $response = '';
+        $code = null;
+
+        while (($line = fgets($socket, 1024)) !== false) {
+            $response .= $line;
+            if (strlen($line) >= 4 && ctype_digit(substr($line, 0, 3))) {
+                $code = (int) substr($line, 0, 3);
+                if ($line[3] === ' ') {
+                    break;
+                }
+            }
+        }
+
+        if ($response === '') {
+            $meta = stream_get_meta_data($socket);
+            $suffix = '';
+            if (($meta['timed_out'] ?? false) === true) {
+                $suffix = ' (socket timed out).';
+            } elseif (($meta['eof'] ?? false) === true) {
+                $suffix = ' (connection closed by server).';
+            } else {
+                $suffix = '.';
+            }
+
+            $this->lastError = 'No response from SMTP server' . ($command !== '' ? ' after ' . $command : '') . $suffix;
+            return null;
+        }
+
+        if ($code === null || !in_array($code, $expectedCodes, true)) {
+            $trimmed = trim($response);
+            $this->lastError = 'SMTP command failed' . ($command !== '' ? ' (' . $command . ')' : '') . ': ' . $trimmed;
+            return null;
+        }
+
+        return $response;
+    }
+
+    private function isTransientFailure(?string $error): bool
+    {
+        if ($error === null || $error === '') {
+            return false;
+        }
+
+        $normalized = strtolower($error);
+        return str_contains($normalized, 'no response from smtp server')
+            || str_contains($normalized, 'timed out')
+            || str_contains($normalized, 'connection closed by server')
+            || str_contains($normalized, 'smtp connection failed');
     }
 
     public function sendWelcomeEmail(string $to, string $customerName): bool
@@ -84,6 +350,7 @@ final class EmailService
     private function getWelcomeEmailTemplate(string $customerName, array $settings): string
     {
         $shopName = $settings['shop_name'] ?? 'Our Store';
+        $receiptFooter = $settings['receipt_footer'] ?? 'Thank you for your business!';
 
         return "
         <html>
@@ -106,7 +373,7 @@ final class EmailService
                 <p>Best regards,<br>The {$shopName} Team</p>
             </div>
             <div class='footer'>
-                <p>{$settings['receipt_footer'] ?? 'Thank you for your business!'}</p>
+                <p>{$receiptFooter}</p>
             </div>
         </body>
         </html>
@@ -117,6 +384,9 @@ final class EmailService
     {
         $shopName = $settings['shop_name'] ?? 'Our Store';
         $currency = $settings['currency_symbol'] ?? '$';
+        $orderId = $orderDetails['order_id'] ?? 'N/A';
+        $orderTotal = $orderDetails['total'] ?? '0.00';
+        $receiptFooter = $settings['receipt_footer'] ?? 'Thank you for your business!';
 
         $itemsHtml = '';
         foreach ($orderDetails['items'] ?? [] as $item) {
@@ -144,7 +414,7 @@ final class EmailService
         <body>
             <div class='header'>
                 <h1>Order Confirmation</h1>
-                <p>Order #{$orderDetails['order_id'] ?? 'N/A'}</p>
+                <p>Order #{$orderId}</p>
             </div>
             <div class='content'>
                 <p>Dear Customer,</p>
@@ -164,12 +434,12 @@ final class EmailService
                     </tbody>
                 </table>
 
-                <p><strong>Total: {$currency}{$orderDetails['total'] ?? '0.00'}</strong></p>
+                <p><strong>Total: {$currency}{$orderTotal}</strong></p>
 
                 <p>Best regards,<br>The {$shopName} Team</p>
             </div>
             <div class='footer'>
-                <p>{$settings['receipt_footer'] ?? 'Thank you for your business!'}</p>
+                <p>{$receiptFooter}</p>
             </div>
         </body>
         </html>
