@@ -1,0 +1,38 @@
+# Keep this repository scoped to the application directory
+*
+!/.gitignore
+!/pos-app/
+!/pos-app/**
+
+# Environment and local secrets
+/pos-app/.env
+/pos-app/.env.*
+!/pos-app/.env.example
+
+# Runtime/cache/log files
+/pos-app/**/*.log
+/pos-app/logs/
+/pos-app/tmp/
+/pos-app/cache/
+/pos-app/storage/cache/
+/pos-app/storage/logs/
+/pos-app/storage/sessions/
+/pos-app/storage/framework/
+/pos-app/uploads/
+
+# Local databases and dumps
+/pos-app/*.sqlite
+/pos-app/*.sqlite3
+/pos-app/*.db
+/pos-app/*.sql.gz
+
+# Build/dependency folders that should be regenerated
+/pos-app/node_modules/
+/pos-app/.phpunit.result.cache
+/pos-app/.php-cs-fixer.cache
+
+# IDE and OS files
+/pos-app/.vscode/
+/pos-app/.idea/
+/pos-app/.DS_Store
+/pos-app/Thumbs.db
