@@ -13,6 +13,7 @@ A lightweight point-of-sale web application built with vanilla PHP and MySQL, de
 - Feature toggles in shop settings
 - Audit logging
 - Optional minimal customer trace fields at checkout (name/contact/note with consent)
+- Customer lookup page for delivery follow-up using minimal captured details
 - Optional Ghana NLP text translation endpoint
 
 ## Tech Stack

@@ -720,6 +720,7 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
         <a href="inventory_adjustments.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 4h14v3H3zm0 5h14v3H3zm0 5h14v2H3z"/></svg><span data-i18n="inventory">Inventory</span></a>
       <?php endif; ?>
       <a href="receipt_history.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5 2h10a1 1 0 0 1 1 1v14l-2-1-2 1-2-1-2 1-2-1-2 1V3a1 1 0 0 1 1-1zm2 4v2h6V6zm0 4v2h6v-2z"/></svg><span data-i18n="receipts">Receipts</span></a>
+      <a href="customer_lookup.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm-6 14a6 6 0 1 1 12 0v1H4v-1z"/></svg><span>Customers</span></a>
       <a href="dashboard.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 3h6v6H3zm8 0h6v10h-6zM3 11h6v6H3zm8 4h6v2h-6z"/></svg><span data-i18n="qlDashboard">Dashboard</span></a>
       <?php if (($enableMultiStore ?? false) && in_array((string) $currentUser['role'], ['admin', 'manager'], true)): ?>
         <a href="multi_store.php" class="utility-link icon-link"><svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2 2 6v2h16V6l-8-4zm-7 8h2v6H3v-6zm4 0h2v6H7v-6zm4 0h2v6h-2v-6zm4 0h2v6h-2v-6z"/></svg><span>Stores</span></a>
@@ -779,6 +780,7 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
         <div class="mb-2 flex flex-wrap items-center gap-2">
           <a href="dashboard.php" class="quicklink-badge rounded-lg px-3 py-1.5 text-xs font-semibold hover:brightness-110" data-i18n="qlDashboard">Dashboard</a>
           <a href="receipt_history.php" class="quicklink-badge rounded-lg px-3 py-1.5 text-xs font-semibold hover:brightness-110" data-i18n="qlReceipts">Receipt History</a>
+          <a href="customer_lookup.php" class="quicklink-badge rounded-lg px-3 py-1.5 text-xs font-semibold hover:brightness-110">Customer Lookup</a>
           <button id="moreToolsToggle" type="button" class="quicklink-badge rounded-lg px-3 py-1.5 text-xs font-semibold hover:brightness-110" data-i18n="showMoreTools" aria-expanded="false" aria-controls="moreToolsPanel">Show more tools</button>
         </div>
 
