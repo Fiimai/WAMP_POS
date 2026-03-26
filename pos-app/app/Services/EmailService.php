@@ -25,19 +25,19 @@ final class EmailService
             return false;
         }
 
-        $smtpHost = $settings['smtp_host'] ?? '';
-        $smtpPort = (int) ($settings['smtp_port'] ?? 587);
-        $smtpUsername = $settings['smtp_username'] ?? '';
-        $smtpPassword = $settings['smtp_password'] ?? '';
-        $smtpEncryption = strtolower(trim((string) ($settings['smtp_encryption'] ?? 'tls')));
+        $smtpHost = (string) (getenv('SMTP_HOST') ?: ($settings['smtp_host'] ?? ''));
+        $smtpPort = (int) (getenv('SMTP_PORT') ?: ($settings['smtp_port'] ?? 587));
+        $smtpUsername = (string) (getenv('SMTP_USERNAME') ?: ($settings['smtp_username'] ?? ''));
+        $smtpPassword = (string) (getenv('SMTP_PASSWORD') ?: ($settings['smtp_password'] ?? ''));
+        $smtpEncryption = strtolower(trim((string) (getenv('SMTP_ENCRYPTION') ?: ($settings['smtp_encryption'] ?? 'tls'))));
 
         if (empty($smtpHost) || empty($smtpUsername) || empty($smtpPassword)) {
             $this->lastError = 'SMTP settings are incomplete. Configure host, username, and password.';
             return false;
         }
 
-        $fromEmail = $fromEmail ?? ($settings['email_from_address'] ?? '');
-        $fromName = $fromName ?? ($settings['email_from_name'] ?? '');
+        $fromEmail = $fromEmail ?? ((string) (getenv('SMTP_FROM_ADDRESS') ?: ($settings['email_from_address'] ?? '')));
+        $fromName = $fromName ?? ((string) (getenv('SMTP_FROM_NAME') ?: ($settings['email_from_name'] ?? '')));
 
         if (empty($fromEmail)) {
             $this->lastError = 'From email address is not configured in Settings.';

@@ -48,9 +48,9 @@ mysql -u root -p pos_db < schema.sql
 mysql -u root -p pos_db < seed.sql
 ```
 
-5. Open the app in browser:
+1. Open the app in browser:
 
-- http://localhost/pos-app/login.php
+- <http://localhost/pos-app/login.php>
 
 ## Database Configuration
 
@@ -65,7 +65,19 @@ Supported variables:
 - DB_PASS
 - DB_CHARSET
 
+SMTP variables (optional, recommended for production):
+
+- SMTP_HOST
+- SMTP_PORT
+- SMTP_USERNAME
+- SMTP_PASSWORD
+- SMTP_ENCRYPTION
+- SMTP_FROM_ADDRESS
+- SMTP_FROM_NAME
+
 Example defaults are provided in .env.example.
+
+If SMTP environment variables are set, they take precedence over values saved in Settings.
 
 ## Optional Translation Setup
 

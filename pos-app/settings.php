@@ -21,6 +21,8 @@ $checkoutAuditGuard = [
   'fix' => '',
 ];
 $settings = ShopSettings::get();
+$smtpPasswordFromEnv = getenv('SMTP_PASSWORD');
+$hasEnvSmtpPassword = is_string($smtpPasswordFromEnv) && $smtpPasswordFromEnv !== '';
 $categoryRepo = new CategoryRepository();
 $categories = $categoryRepo->all();
 
@@ -255,6 +257,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
       if ($payload['tax_rate_percent'] < 0 || $payload['tax_rate_percent'] > 100) {
         $errors[] = 'Tax rate must be between 0 and 100.';
+      }
+
+      // Avoid wiping SMTP password when admin saves other settings.
+      if ($payload['smtp_password'] === '') {
+        $payload['smtp_password'] = (string) ($settings['smtp_password'] ?? '');
       }
 
       if (!preg_match('/^#[0-9A-F]{6}$/', $payload['theme_accent_primary'])) {
@@ -918,7 +925,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             <input name="smtp_username" value="<?= e((string) ($settings['smtp_username'] ?? '')) ?>" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
           </label>
           <label class="text-sm"><span>SMTP Password</span>
-            <input type="password" name="smtp_password" value="<?= e((string) ($settings['smtp_password'] ?? '')) ?>" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
+            <input type="password" name="smtp_password" value="" placeholder="Leave blank to keep existing" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" autocomplete="new-password" />
           </label>
           <label class="text-sm"><span>Encryption</span>
             <select name="smtp_encryption" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2">
@@ -934,6 +941,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             <input name="email_from_name" value="<?= e((string) ($settings['email_from_name'] ?? '')) ?>" placeholder="Your Shop Name" class="mt-1 w-full rounded-lg border border-white/15 bg-slate-950/60 px-3 py-2" />
           </label>
         </div>
+        <?php if ($hasEnvSmtpPassword): ?>
+          <p class="mt-2 text-xs text-cyan-300">SMTP password is currently sourced from server environment variable SMTP_PASSWORD.</p>
+        <?php else: ?>
+          <p class="mt-2 text-xs text-slate-400">Tip: set SMTP_PASSWORD in server environment to avoid storing SMTP secrets in the database.</p>
+        <?php endif; ?>
         <div class="mt-3">
           <a href="test_email.php" class="text-cyan-400 hover:text-cyan-300 text-sm">Test Email Configuration →</a>
         </div>
