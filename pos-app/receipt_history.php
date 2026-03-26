@@ -347,7 +347,13 @@ try {
 </head>
 <body class="ambient-strong text-slate-100 antialiased">
   <a href="#mainContent" class="skip-link">Skip to receipt history content</a>
-  <div class="matrix-grid" aria-hidden="true"></div>`r`n  <div class="scanner-line" aria-hidden="true"></div>`r`n  <div class="retro-orbs" aria-hidden="true">`r`n    <span class="orb orb-a"></span>`r`n    <span class="orb orb-b"></span>`r`n  </div>`r`n  <main id="mainContent" class="relative z-10 mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+  <div class="matrix-grid" aria-hidden="true"></div>
+  <div class="scanner-line" aria-hidden="true"></div>
+  <div class="retro-orbs" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+  </div>
+  <main id="mainContent" class="relative z-10 mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
         <p class="font-display text-xs uppercase tracking-[0.28em] text-cyan-300"><?= e(strtoupper($shopName) . ' POS') ?></p>

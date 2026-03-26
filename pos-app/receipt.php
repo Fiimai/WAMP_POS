@@ -318,7 +318,7 @@ try {
         <span id="themeToggleText">Dark</span>
       </button>
       <button type="button" onclick="window.print()">Print</button>
-      <button type="button" id="closeReceiptBtn">Close / Back</button>
+      <button type="button" id="closeReceiptBtn">Close</button>
     </div>
   </div>
 
@@ -380,17 +380,7 @@ try {
 
     if (closeReceiptBtn) {
       closeReceiptBtn.addEventListener('click', function () {
-        try {
-          window.close();
-        } catch (error) {
-        }
-
-        // If the browser blocks close() on this tab, navigate to a safe page.
-        setTimeout(function () {
-          if (!window.closed) {
-            window.location.href = 'receipt_history.php';
-          }
-        }, 220);
+        window.close();
       });
     }
 
