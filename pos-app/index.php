@@ -851,6 +851,7 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     const totalEl = document.getElementById('total');
     const clearCartBtn = document.getElementById('clearCart');
     const checkoutBtn = document.getElementById('checkoutBtn');
+    const customerEmailInput = document.getElementById('customerEmail');
     const currencySymbol = '<?= e($currencySymbol) ?>';
     const taxRatePercent = <?= json_encode($taxRatePercent) ?>;
     const enableDiscounts = <?= json_encode($enableDiscounts) ?>;
@@ -1807,12 +1808,16 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       }
 
       const discountAmount = enableDiscounts ? Number(document.getElementById('discountAmount')?.value || 0) : 0;
+      const customerEmail = (customerEmailInput && typeof customerEmailInput.value === 'string')
+        ? customerEmailInput.value.trim()
+        : '';
 
       await window.POSCheckout.processCheckout({
         endpoint: './api/checkout.php',
         csrfToken: CSRF_TOKEN,
         paymentMethod: 'cash',
         discountAmount: discountAmount,
+        customerEmail: customerEmail,
         confirmMessage: t('confirmCheckout'),
         onStart: () => {
           if (checkoutBtn) {
@@ -1822,6 +1827,9 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
         },
         onSuccess: async (response) => {
           await loadCart();
+          if (customerEmailInput) {
+            customerEmailInput.value = '';
+          }
           await searchProducts((searchInput && searchInput.value ? searchInput.value : '').trim());
           const receiptNo = response?.data?.receipt_no || 'N/A';
           const saleId = Number(response?.data?.sale_id || 0);

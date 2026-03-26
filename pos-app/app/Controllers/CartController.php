@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ShopSettings;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\InventoryMovementRepository;
+use App\Services\EmailService;
 use PDO;
 use Throwable;
 
@@ -74,7 +75,7 @@ final class CartController
         return ['ok' => true, 'message' => 'Cart cleared', 'cart' => $this->withTotals([])];
     }
 
-    public function checkout(int $cashierUserId, string $paymentMethod = 'cash', float $discountAmount = 0): array
+    public function checkout(int $cashierUserId, string $paymentMethod = 'cash', float $discountAmount = 0, ?string $customerEmail = null): array
     {
         $allowedMethods = ['cash', 'card', 'mobile', 'mixed'];
         if (!in_array($paymentMethod, $allowedMethods, true)) {
@@ -209,6 +210,46 @@ final class CartController
 
             $pdo->commit();
 
+            $emailStatus = null;
+            if ($customerEmail !== null && $customerEmail !== '') {
+                if (filter_var($customerEmail, FILTER_VALIDATE_EMAIL) === false) {
+                    $emailStatus = [
+                        'sent' => false,
+                        'message' => 'Customer email format is invalid. Sale completed without email.',
+                    ];
+                } else {
+                    try {
+                        $emailService = new EmailService();
+                        $emailSent = $emailService->sendOrderConfirmation($customerEmail, [
+                            'order_id' => $receiptNo,
+                            'items' => array_map(
+                                static fn (array $row): array => [
+                                    'name' => (string) ($row['name'] ?? 'Item'),
+                                    'quantity' => (int) ($row['qty'] ?? 0),
+                                    'price' => number_format((float) ($row['unit_price'] ?? 0), 2, '.', ''),
+                                    'total' => number_format((float) ($row['line_total'] ?? 0), 2, '.', ''),
+                                ],
+                                $validatedItems
+                            ),
+                            'total' => number_format($total, 2, '.', ''),
+                        ]);
+
+                        $emailStatus = [
+                            'sent' => $emailSent,
+                            'message' => $emailSent
+                                ? 'Order confirmation email sent.'
+                                : ('Order completed, but email failed: ' . ((string) ($emailService->getLastError() ?? 'Unknown error'))),
+                        ];
+                    } catch (Throwable $emailThrowable) {
+                        error_log('checkout email failure: ' . $emailThrowable->getMessage());
+                        $emailStatus = [
+                            'sent' => false,
+                            'message' => 'Order completed, but email failed unexpectedly.',
+                        ];
+                    }
+                }
+            }
+
             try {
                 $auditRepo = new AuditLogRepository();
                 $auditRepo->record(
@@ -240,6 +281,7 @@ final class CartController
                     'subtotal' => $subtotal,
                     'tax' => $tax,
                     'total' => $total,
+                    'email_status' => $emailStatus,
                 ],
             ];
         } catch (Throwable $throwable) {

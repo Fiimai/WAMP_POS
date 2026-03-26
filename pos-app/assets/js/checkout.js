@@ -7,6 +7,7 @@
     const csrfToken = String(options.csrfToken || '');
     const paymentMethod = String(options.paymentMethod || 'cash');
     const discountAmount = Number(options.discountAmount || 0);
+    const customerEmail = String(options.customerEmail || '').trim();
     const confirmMessage = String(options.confirmMessage || 'Confirm checkout and process payment?');
 
     const onStart = typeof options.onStart === 'function' ? options.onStart : function () {};
@@ -27,7 +28,11 @@
           'Content-Type': 'application/json',
           'X-CSRF-Token': csrfToken
         },
-        body: JSON.stringify({ payment_method: paymentMethod, discount_amount: discountAmount })
+        body: JSON.stringify({
+          payment_method: paymentMethod,
+          discount_amount: discountAmount,
+          customer_email: customerEmail
+        })
       });
 
       const result = await response.json();

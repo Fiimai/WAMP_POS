@@ -8,6 +8,10 @@
     <div id="cartItems" class="scrollbar-thin flex-1 space-y-3 overflow-y-auto pr-1" aria-live="polite"></div>
 
     <div id="cartSummary" class="mt-4 space-y-2 rounded-2xl border border-white/10 bg-slate-900/45 p-4 text-sm">
+      <div class="flex flex-col gap-1 text-slate-300">
+        <label for="customerEmail" class="text-xs font-medium">Customer Email (optional)</label>
+        <input id="customerEmail" type="email" placeholder="customer@example.com" class="rounded border border-white/20 bg-slate-800 px-2 py-1 text-sm text-white" />
+      </div>
       <div class="flex items-center justify-between text-slate-300">
         <span data-i18n="subtotal">Subtotal</span>
         <span id="subtotal">$0.00</span>
