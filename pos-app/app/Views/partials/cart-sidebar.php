@@ -8,9 +8,21 @@
     <div id="cartItems" class="scrollbar-thin flex-1 space-y-3 overflow-y-auto pr-1" aria-live="polite"></div>
 
     <div id="cartSummary" class="mt-4 space-y-2 rounded-2xl border border-white/10 bg-slate-900/45 p-4 text-sm">
-      <div class="flex flex-col gap-1 text-slate-300">
-        <label for="customerEmail" class="text-xs font-medium">Customer Email (optional)</label>
-        <input id="customerEmail" type="email" placeholder="customer@example.com" class="rounded border border-white/20 bg-slate-800 px-2 py-1 text-sm text-white" />
+      <div class="space-y-2 rounded-xl border border-white/10 bg-slate-950/40 p-2.5 text-slate-300">
+        <p class="text-xs font-semibold text-slate-200">Customer Details (optional)</p>
+        <label for="customerName" class="block text-xs font-medium">Name or Nickname</label>
+        <input id="customerName" type="text" maxlength="80" placeholder="Ama / Mr. K" class="w-full rounded border border-white/20 bg-slate-800 px-2 py-1 text-sm text-white" />
+
+        <label for="customerContact" class="block text-xs font-medium">Contact (phone or email)</label>
+        <input id="customerContact" type="text" maxlength="120" placeholder="+233... or name@email.com" class="w-full rounded border border-white/20 bg-slate-800 px-2 py-1 text-sm text-white" />
+
+        <label for="deliveryNote" class="block text-xs font-medium">Delivery Note (optional)</label>
+        <textarea id="deliveryNote" rows="2" maxlength="255" placeholder="Landmark or short note" class="w-full rounded border border-white/20 bg-slate-800 px-2 py-1 text-sm text-white"></textarea>
+
+        <label class="inline-flex items-start gap-2 text-xs">
+          <input id="customerConsent" type="checkbox" class="mt-0.5 rounded border-white/30 bg-slate-800" />
+          <span>Customer agreed to store these details for delivery follow-up.</span>
+        </label>
       </div>
       <div class="flex items-center justify-between text-slate-300">
         <span data-i18n="subtotal">Subtotal</span>

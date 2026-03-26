@@ -15,6 +15,8 @@ use Throwable;
 
 final class CartController
 {
+    private static ?array $salesColumnMap = null;
+
     public function get(): array
     {
         return $this->withTotals($this->cartItems());
@@ -75,7 +77,15 @@ final class CartController
         return ['ok' => true, 'message' => 'Cart cleared', 'cart' => $this->withTotals([])];
     }
 
-    public function checkout(int $cashierUserId, string $paymentMethod = 'cash', float $discountAmount = 0, ?string $customerEmail = null): array
+    public function checkout(
+        int $cashierUserId,
+        string $paymentMethod = 'cash',
+        float $discountAmount = 0,
+        ?string $customerName = null,
+        ?string $customerContact = null,
+        ?string $deliveryNote = null,
+        bool $customerConsent = false
+    ): array
     {
         $allowedMethods = ['cash', 'card', 'mobile', 'mixed'];
         if (!in_array($paymentMethod, $allowedMethods, true)) {
@@ -85,6 +95,27 @@ final class CartController
         $cart = $this->cartItems();
         if ($cart === []) {
             return ['ok' => false, 'message' => 'Cart is empty'];
+        }
+
+        $customerName = $customerName !== null ? trim($customerName) : '';
+        $customerContact = $customerContact !== null ? trim($customerContact) : '';
+        $deliveryNote = $deliveryNote !== null ? trim($deliveryNote) : '';
+
+        if (strlen($customerName) > 80) {
+            return ['ok' => false, 'message' => 'Customer name must be 80 characters or less.'];
+        }
+
+        if (strlen($customerContact) > 120) {
+            return ['ok' => false, 'message' => 'Customer contact must be 120 characters or less.'];
+        }
+
+        if (strlen($deliveryNote) > 255) {
+            return ['ok' => false, 'message' => 'Delivery note must be 255 characters or less.'];
+        }
+
+        $hasCustomerInfo = $customerName !== '' || $customerContact !== '' || $deliveryNote !== '';
+        if ($hasCustomerInfo && !$customerConsent) {
+            return ['ok' => false, 'message' => 'Customer consent is required to save contact details.'];
         }
 
         $cartWithTotals = $this->withTotals($cart);
@@ -133,6 +164,7 @@ final class CartController
 
                 $validatedItems[] = [
                     'product_id' => $productId,
+                    'name' => (string) $product['name'],
                     'qty' => $qty,
                     'unit_price' => $unitPrice,
                     'line_total' => $lineTotal,
@@ -153,11 +185,29 @@ final class CartController
 
             $receiptNo = 'RCP-' . date('YmdHis') . '-' . random_int(1000, 9999);
 
-            $saleStmt = $pdo->prepare(
-                'INSERT INTO sales (receipt_no, cashier_user_id, sold_at, subtotal, tax_amount, discount_amount, total_amount, payment_method)
-                 VALUES (:receipt_no, :cashier_user_id, NOW(), :subtotal, :tax_amount, :discount_amount, :total_amount, :payment_method)'
-            );
-            $saleStmt->execute([
+            $saleColumns = [
+                'receipt_no',
+                'cashier_user_id',
+                'sold_at',
+                'subtotal',
+                'tax_amount',
+                'discount_amount',
+                'total_amount',
+                'payment_method',
+            ];
+
+            $saleValues = [
+                ':receipt_no',
+                ':cashier_user_id',
+                'NOW()',
+                ':subtotal',
+                ':tax_amount',
+                ':discount_amount',
+                ':total_amount',
+                ':payment_method',
+            ];
+
+            $saleParams = [
                 ':receipt_no' => $receiptNo,
                 ':cashier_user_id' => $cashierUserId,
                 ':subtotal' => $subtotal,
@@ -165,7 +215,36 @@ final class CartController
                 ':discount_amount' => $discountAmount,
                 ':total_amount' => $total,
                 ':payment_method' => $paymentMethod,
-            ]);
+            ];
+
+            if (self::hasSalesColumn($pdo, 'customer_name')) {
+                $saleColumns[] = 'customer_name';
+                $saleValues[] = ':customer_name';
+                $saleParams[':customer_name'] = $customerName !== '' ? $customerName : null;
+            }
+
+            if (self::hasSalesColumn($pdo, 'customer_contact')) {
+                $saleColumns[] = 'customer_contact';
+                $saleValues[] = ':customer_contact';
+                $saleParams[':customer_contact'] = $customerContact !== '' ? $customerContact : null;
+            }
+
+            if (self::hasSalesColumn($pdo, 'delivery_note')) {
+                $saleColumns[] = 'delivery_note';
+                $saleValues[] = ':delivery_note';
+                $saleParams[':delivery_note'] = $deliveryNote !== '' ? $deliveryNote : null;
+            }
+
+            if (self::hasSalesColumn($pdo, 'customer_consent_at')) {
+                $saleColumns[] = 'customer_consent_at';
+                $saleValues[] = $hasCustomerInfo && $customerConsent ? 'NOW()' : 'NULL';
+            }
+
+            $saleStmt = $pdo->prepare(
+                'INSERT INTO sales (' . implode(', ', $saleColumns) . ')
+                 VALUES (' . implode(', ', $saleValues) . ')'
+            );
+            $saleStmt->execute($saleParams);
 
             $saleId = (int) $pdo->lastInsertId();
 
@@ -211,11 +290,12 @@ final class CartController
             $pdo->commit();
 
             $emailStatus = null;
-            if ($customerEmail !== null && $customerEmail !== '') {
+            $customerEmail = $customerContact;
+            if ($customerEmail !== '') {
                 if (filter_var($customerEmail, FILTER_VALIDATE_EMAIL) === false) {
                     $emailStatus = [
                         'sent' => false,
-                        'message' => 'Customer email format is invalid. Sale completed without email.',
+                        'message' => 'Customer contact is not an email address. Sale completed without email.',
                     ];
                 } else {
                     try {
@@ -261,6 +341,8 @@ final class CartController
                         'receipt_no' => $receiptNo,
                         'total' => $total,
                         'payment_method' => $paymentMethod,
+                        'customer_name' => $customerName !== '' ? $customerName : null,
+                        'customer_contact' => $customerContact !== '' ? $customerContact : null,
                     ],
                     null,
                     null,
@@ -282,6 +364,11 @@ final class CartController
                     'tax' => $tax,
                     'total' => $total,
                     'email_status' => $emailStatus,
+                    'customer' => [
+                        'name' => $customerName !== '' ? $customerName : null,
+                        'contact' => $customerContact !== '' ? $customerContact : null,
+                        'delivery_note' => $deliveryNote !== '' ? $deliveryNote : null,
+                    ],
                 ],
             ];
         } catch (Throwable $throwable) {
@@ -364,6 +451,28 @@ final class CartController
         }
 
         return null;
+    }
+
+    private static function hasSalesColumn(PDO $pdo, string $column): bool
+    {
+        if (self::$salesColumnMap === null) {
+            self::$salesColumnMap = [];
+
+            try {
+                $statement = $pdo->query('SHOW COLUMNS FROM sales');
+                $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($rows as $row) {
+                    $name = (string) ($row['Field'] ?? '');
+                    if ($name !== '') {
+                        self::$salesColumnMap[$name] = true;
+                    }
+                }
+            } catch (Throwable $throwable) {
+                self::$salesColumnMap = [];
+            }
+        }
+
+        return self::$salesColumnMap[$column] ?? false;
     }
 }
 

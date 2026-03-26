@@ -851,7 +851,10 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
     const totalEl = document.getElementById('total');
     const clearCartBtn = document.getElementById('clearCart');
     const checkoutBtn = document.getElementById('checkoutBtn');
-    const customerEmailInput = document.getElementById('customerEmail');
+    const customerNameInput = document.getElementById('customerName');
+    const customerContactInput = document.getElementById('customerContact');
+    const deliveryNoteInput = document.getElementById('deliveryNote');
+    const customerConsentInput = document.getElementById('customerConsent');
     const currencySymbol = '<?= e($currencySymbol) ?>';
     const taxRatePercent = <?= json_encode($taxRatePercent) ?>;
     const enableDiscounts = <?= json_encode($enableDiscounts) ?>;
@@ -1808,16 +1811,31 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
       }
 
       const discountAmount = enableDiscounts ? Number(document.getElementById('discountAmount')?.value || 0) : 0;
-      const customerEmail = (customerEmailInput && typeof customerEmailInput.value === 'string')
-        ? customerEmailInput.value.trim()
+      const customerName = customerNameInput && typeof customerNameInput.value === 'string'
+        ? customerNameInput.value.trim()
         : '';
+      const customerContact = customerContactInput && typeof customerContactInput.value === 'string'
+        ? customerContactInput.value.trim()
+        : '';
+      const deliveryNote = deliveryNoteInput && typeof deliveryNoteInput.value === 'string'
+        ? deliveryNoteInput.value.trim()
+        : '';
+      const customerConsent = !!(customerConsentInput && customerConsentInput.checked);
+
+      if ((customerName || customerContact || deliveryNote) && !customerConsent) {
+        toast('Please confirm customer consent before checkout.', 'error');
+        return;
+      }
 
       await window.POSCheckout.processCheckout({
         endpoint: './api/checkout.php',
         csrfToken: CSRF_TOKEN,
         paymentMethod: 'cash',
         discountAmount: discountAmount,
-        customerEmail: customerEmail,
+        customerName: customerName,
+        customerContact: customerContact,
+        deliveryNote: deliveryNote,
+        customerConsent: customerConsent,
         confirmMessage: t('confirmCheckout'),
         onStart: () => {
           if (checkoutBtn) {
@@ -1827,9 +1845,10 @@ $recentProductsJson = json_encode($recentProducts, JSON_UNESCAPED_SLASHES);
         },
         onSuccess: async (response) => {
           await loadCart();
-          if (customerEmailInput) {
-            customerEmailInput.value = '';
-          }
+          if (customerNameInput) customerNameInput.value = '';
+          if (customerContactInput) customerContactInput.value = '';
+          if (deliveryNoteInput) deliveryNoteInput.value = '';
+          if (customerConsentInput) customerConsentInput.checked = false;
           await searchProducts((searchInput && searchInput.value ? searchInput.value : '').trim());
           const receiptNo = response?.data?.receipt_no || 'N/A';
           const saleId = Number(response?.data?.sale_id || 0);

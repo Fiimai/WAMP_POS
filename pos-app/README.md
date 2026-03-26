@@ -12,6 +12,7 @@ A lightweight point-of-sale web application built with vanilla PHP and MySQL, de
 - Time clock features
 - Feature toggles in shop settings
 - Audit logging
+- Optional minimal customer trace fields at checkout (name/contact/note with consent)
 - Optional Ghana NLP text translation endpoint
 
 ## Tech Stack
